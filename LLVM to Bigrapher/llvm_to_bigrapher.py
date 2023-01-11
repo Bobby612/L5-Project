@@ -87,6 +87,7 @@ def function_cfg_node(block: ValueRef):
                 start = instruction_str.find("@")
                 end = instruction_str.find("(")
                 dependent_func += [instruction_str[start+1:end]]
+                block_body += [ output_bigraph_simple_node(translate_instruction_call(str(instruction))) ]
 
             case "icmp":
                 block_body += [ output_bigraph_simple_node(translate_instruction_icmp(str(instruction))) ]
@@ -138,6 +139,41 @@ Function.(
     # instruction_info["read"] = [ ]
     # instruction_info["type"] = [  ]
     # instruction_info["options"] = []
+
+def translate_instruction_call(instruction):
+    instruction = instruction.replace("("," ").split()
+    call_index = instruction.index("call")
+    instruction_info = {}
+    if instruction[call_index+1] == "noalias":
+        type_index = call_index + 2
+        instruction_info["options"] = [ transform_option("noalias")]
+    else:
+        type_index = call_index + 1
+        instruction_info["options"] = [ ]
+
+    
+    instruction_info["opcode"] = "Call"
+    if instruction[0][0] == "%":
+        instruction_info["write"] = [create_address(instruction[0])]
+    else:
+        instruction_info["write"] = []
+    instruction_info["type"] = [ transform_type(instruction[type_index]) ]
+    instruction_info["read"] = [ create_address(instruction[type_index+1], 0) ]
+    for n, i in enumerate(instruction[type_index + 2:]):
+        if i[0] == "#":
+            break
+        if n%2 == 0:
+            instruction_info["type"] += [transform_type(i, n+1)]
+        else:
+            instruction_info["read"] += [create_address(i[:-1], n)]
+    
+    
+    call_index -= 1
+    while call_index >= 0 and instruction[call_index] != "=":
+        instruction_info["options"] += [transform_option(instruction[call_index])]
+        call_index -= 1
+    
+    return instruction_info
 
 def translate_instruction_alloca(instruction):
     instruction = instruction.split()
@@ -271,8 +307,10 @@ def transform_option(option_string):
 def create_address(number_string, order=-1):
     return_string = ""
     if number_string[0] == "@":
-        label = "label_" + number_string[1:-1]
-        return f"Label{{{label}}}"        
+        if number_string[-1] == ",":
+            number_string = number_string[:-1]
+        label = "label_" + number_string[1:]
+        return f"Label({order}){{{label}}}"        
     
     if number_string[0] == "%":
         for i in number_string:
@@ -298,7 +336,7 @@ def create_address(number_string, order=-1):
                 return_string += "nine"
         return f"Adr({order}){{{return_string}}}"
 
-    return f"Const({number_string})"
+    return f"Const({order},{number_string})"
 
 
 
