@@ -25,10 +25,17 @@ def main(file_name):
             function_calls += block_func_calls
 
         ipg += [ function_ipg_node(function.name, function_calls) ]
-        cfg += [ "( " + " | ".join(cfg_f) + " )"]
+        cfg += [ f"Cfgf{{cfg_ipg_{function.name}}}.( " + " | ".join(cfg_f) + " )"]
 
+    ipg = "Ipg.(\n" \
+        + " |\n".join(ipg) \
+        + "    )"
+
+    cfg = "Cfg.(\n" \
+        + " |\n".join(cfg) \
+        + "    )"
     
-    print(ipg,"\n\n\n", cfg)
+    print(ipg + "\n||\n" + cfg)
 
 
     # for var in llvm_module.global_variables:
@@ -55,17 +62,18 @@ def function_cfg_node(block: ValueRef):
     block_body = []
     dependent_func = []
     for instruction in block.instructions:
-        entrance_register = "cfg_" + str(instruction).split()[0][1:]
+        e = int(str(instruction).split()[0][1:])
+        entrance_register = "cfg_" + str(e-1)
         break
     
     for instruction in block.instructions:
         match instruction.opcode:
-            case "add" | "sub" | "mul" | "shl" :
-                block_body + [ output_bigraph_simple_node(translate_instruction_quad(str(instruction))) ]
+            case "add" | "sub" | "mul" | "shl" | "srem" | "urem" :
+                block_body += [ output_bigraph_simple_node(translate_instruction_quad(str(instruction))) ]
             case "load":
-                block_body + [ output_bigraph_simple_node(translate_instruction_load(str(instruction))) ]
+                block_body += [ output_bigraph_simple_node(translate_instruction_load(str(instruction))) ]
             case "store":
-                block_body + [ output_bigraph_simple_node(translate_instruction_store(str(instruction))) ]
+                block_body += [ output_bigraph_simple_node(translate_instruction_store(str(instruction))) ]
             case "br":
                 match translate_instruction_br(instruction):
                     case str(string):
@@ -80,7 +88,14 @@ def function_cfg_node(block: ValueRef):
                 end = instruction_str.find("(")
                 dependent_func += [instruction_str[start+1:end]]
 
-
+            case "icmp":
+                block_body += [ output_bigraph_simple_node(translate_instruction_icmp(str(instruction))) ]
+            case "ret":
+                block_body += [ output_bigraph_simple_node(translate_instruction_ret(str(instruction))) ]
+            case "bitcast":
+                block_body += [ output_bigraph_simple_node(translate_instruction_bitcast(str(instruction))) ]
+            case "alloca":
+                block_body += [ output_bigraph_simple_node(translate_instruction_alloca(str(instruction))) ]
             case other:
                 print(f"Unknown instruction {other}")
 
@@ -116,6 +131,57 @@ Function.(
     CfgBlock{{cfg_ipg_{function_name}}}
 )
 """
+
+    # instruction_info = {}
+    # instruction_info["opcode"] = ""
+    # instruction_info["write"] = []
+    # instruction_info["read"] = [ ]
+    # instruction_info["type"] = [  ]
+    # instruction_info["options"] = []
+
+def translate_instruction_alloca(instruction):
+    instruction = instruction.split()
+    instruction_info = {}
+    instruction_info["opcode"] = "Alloca"
+    instruction_info["write"] = [create_address(instruction[0])]
+    instruction_info["read"] = [ ]
+    instruction_info["type"] = [ transform_type(instruction[3][:-1])  ]
+    instruction_info["options"] = []
+    return instruction_info
+
+def translate_instruction_bitcast(instruction):
+    instruction = instruction.split()
+    instruction_info = {}
+    instruction_info["opcode"] = "Bitcast"
+    instruction_info["write"] = [create_address(instruction[0])]
+    instruction_info["read"] = [create_address(instruction[4])]
+    instruction_info["type"] = [ transform_type(instruction[4], 1), transform_type(instruction[6], 2) ]
+    instruction_info["options"] = []
+    return instruction_info
+
+
+
+def translate_instruction_ret(instruction):
+    instruction = instruction.split()
+    instruction_info = {}
+    instruction_info["opcode"] = "Ret"
+    instruction_info["write"] = []
+    instruction_info["read"] = [ create_address(instruction[2]) ]
+    instruction_info["type"] = [ transform_type(instruction[1])  ]
+    instruction_info["options"] = []
+    return instruction_info
+
+
+def translate_instruction_icmp(instruction):
+    instruction = instruction.split()
+    instruction_info = {}
+    instruction_info["opcode"] = "Icmp"
+    instruction_info["write"] = [create_address(instruction[0])]
+    instruction_info["read"] = [ create_address(instruction[-2], 1), create_address(instruction[-1], 2)]
+    instruction_info["type"] = [ transform_type(instruction[4]) ]
+    instruction_info["options"] = [transform_option(instruction[3])]
+    return instruction_info
+
 def translate_instruction_br(instruction):
     instruction = str(instruction)
     instruction = instruction.split()
@@ -123,7 +189,7 @@ def translate_instruction_br(instruction):
         instruction_info = {}
         instruction_info["opcode"] = "Br"
         instruction_info["write"] = []
-        instruction_info["read"] = [ wordify(instruction[2]) ]
+        instruction_info["read"] = [ create_address(instruction[2]) ]
         instruction_info["type"] = [  ]
         instruction_info["options"] = []
         return instruction_info, "cfg_" + instruction[4][1:-1], "cfg_" + instruction[6][1:]
@@ -135,9 +201,9 @@ def translate_instruction_load(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Load"
-    instruction_info["write"] = [ wordify(instruction[0]) ]
-    instruction_info["read"] = [ wordify(instruction[-3]) ]
-    instruction_info["type"] = [ instruction[3][:-1] ]
+    instruction_info["write"] = [ create_address(instruction[0]) ]
+    instruction_info["read"] = [ create_address(instruction[-3]) ]
+    instruction_info["type"] = [ transform_type(instruction[3][:-1], 1), transform_type(instruction[4], 2) ]
     instruction_info["options"] = []
 
     return instruction_info
@@ -146,9 +212,9 @@ def translate_instruction_store(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Store"
-    instruction_info["write"] = [ wordify(instruction[-3]) ]
-    instruction_info["read"] = [ wordify(instruction[2]) ]
-    instruction_info["type"] = [ instruction[1] ]
+    instruction_info["write"] = [ create_address(instruction[-3]) ]
+    instruction_info["read"] = [ create_address(instruction[2]) ]
+    instruction_info["type"] = [ transform_type(instruction[1], 1), transform_type(instruction[3], 2)]
     instruction_info["options"] = []
 
     return instruction_info
@@ -158,7 +224,7 @@ def translate_instruction_quad(instruction):
     Translate a typical integer arithmetic instruction with op-code, type, two operands,
     and up to two extra options.
     Instructions:
-    add; sub; mul; shl
+    add; sub; mul; shl; srem; urem
 
     Example:
     <result> = add <ty> <op1>, <op2>          ; yields ty:result
@@ -169,13 +235,13 @@ def translate_instruction_quad(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = instruction[2].capitalize()
-    instruction_info["write"] = [ wordify(instruction[0]) ]
-    instruction_info["read"] = [ wordify(instruction[-2]) , wordify(instruction[-1]) ]
-    instruction_info["type"] = [ instruction[-3] ]
+    instruction_info["write"] = [ create_address(instruction[0]) ]
+    instruction_info["read"] = [ create_address(instruction[-2], 1) , create_address(instruction[-1], 2) ]
+    instruction_info["type"] = [ transform_type(instruction[-3]) ]
     if instruction[-4] != instruction[2]:
-        instruction_info["options"] = [instruction[-4]]
+        instruction_info["options"] = [transform_option(instruction[-4])]
         if instruction[-5] != instruction[2]:
-            instruction_info["options"] += [instruction[-5]]
+            instruction_info["options"] += [transform_option(instruction[-5])]
     else:
         instruction_info["options"] = []
 
@@ -190,41 +256,49 @@ Node.(
     Read.({" | ".join(info["read"])}) |
     Write.({" | ".join(info["write"])}) |
     Extra.(
-        DataType.({" | ".join(info["type"])}) |
+        DataTypes.({" | ".join(info["type"])}) |
         Options.({" | ".join(info["options"])})    
     )
 )
 """
 
+def transform_type(type_string, type_order=-1):
+    return f"DataType({type_order},\"{type_string}\")"
 
-def wordify(number_string):
+def transform_option(option_string):
+    return f"Option(\"{option_string}\")"
+
+def create_address(number_string, order=-1):
     return_string = ""
-    if number_string[0] != "%":
-        return f"Const({number_string})"
+    if number_string[0] == "@":
+        label = "label_" + number_string[1:-1]
+        return f"Label{{{label}}}"        
     
-    for i in number_string:
-        if i == '0':
-            return_string += "zero"
-        elif i == '1':
-            return_string += "one"
-        elif i == "2":
-            return_string += "two"
-        elif i == "3":
-            return_string += "three"
-        elif i == "4":
-            return_string += "four"
-        elif i == "5":
-            return_string += "five"
-        elif i == "6":
-            return_string += "six"
-        elif i == "7":
-            return_string += "seven"
-        elif i == "8":
-            return_string += "eight"
-        elif i == "9":
-            return_string += "nine"
-    return f"Adr{{{return_string}}}"
+    if number_string[0] == "%":
+        for i in number_string:
+            if i == '0':
+                return_string += "zero"
+            elif i == '1':
+                return_string += "one"
+            elif i == "2":
+                return_string += "two"
+            elif i == "3":
+                return_string += "three"
+            elif i == "4":
+                return_string += "four"
+            elif i == "5":
+                return_string += "five"
+            elif i == "6":
+                return_string += "six"
+            elif i == "7":
+                return_string += "seven"
+            elif i == "8":
+                return_string += "eight"
+            elif i == "9":
+                return_string += "nine"
+        return f"Adr({order}){{{return_string}}}"
 
+    return f"Const({number_string})"
 
 
 
