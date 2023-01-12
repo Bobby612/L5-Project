@@ -1,0 +1,52 @@
+## CFG controls
+ctrl Ipg = 0;
+ctrl Cfg = 0;
+
+ctrl Function = 0;
+ctrl CfgBlock = 1;
+
+ctrl BlockEntry = 1;
+ctrl BlockExit = 1;
+
+ctrl Cfgf = 1; 
+
+## Node controls
+ctrl Node = 0;
+ctrl NodeType = 0;
+ctrl Body = 0;
+ctrl Read = 0;
+ctrl Write = 0;
+ctrl Extra = 0;
+
+## Node Types
+atomic ctrl Simple = 0;
+
+## Simple Node Types (aka instructions)
+atomic ctrl Add = 0;
+atomic ctrl Sub = 0;
+atomic ctrl Mul = 0;
+atomic ctrl Shl = 0; 
+atomic ctrl Srem = 0;
+atomic ctrl Urem = 0;
+atomic ctrl Load = 0;
+atomic ctrl Store = 0;
+atomic ctrl Br = 0;
+atomic ctrl Call = 0;
+atomic ctrl Icmp = 0;
+atomic ctrl Ret = 0;
+atomic ctrl Bitcast = 0;
+atomic ctrl Alloca = 0;
+
+## Address controls
+atomic fun ctrl Adr(i) = 1;
+atomic fun ctrl Label(i) = 1;
+atomic fun ctrl Const(i, j) = 0;
+
+## DataTypes
+ctrl DataTypes = 0;
+atomic fun ctrl DataType(i, s) = 0;
+
+## Options
+ctrl Options = 0;
+atomic fun ctrl Option(s) = 0;
+
