@@ -42,16 +42,16 @@ def main(file_name):
         ipg += [ function_ipg_node(function, function_calls) ]
         cfg += [ " ".join(closures) + "\n" \
              + f"Cfgf{{cfg_ipg_{function.name}}}.( \n"\
-             + "Read.(" + " | ".join(function_reads) + ")\n" \
-             + "DataTypes.(" + " | ".join(function_types) + ")\n" \
-             + " | ".join(cfg_f) + " )"]
+             + "Read.(" + join_or_1(" | ", function_reads) + ") |\n" \
+             + "DataTypes.(" + join_or_1(" | ",function_types) + ") |\n" \
+             + join_or_1(" | ",cfg_f) + " )"]
 
     ipg = "Ipg.(\n" \
-        + " |\n".join(ipg) \
+        + join_or_1(" |\n",ipg) \
         + "    )"
 
     cfg = "Cfg.(\n" \
-        + " |\n".join(cfg) \
+        + join_or_1(" |\n",cfg) \
         + "    )"
     
     print(ipg + "\n||\n" + cfg)
@@ -102,12 +102,12 @@ def function_cfg_node(block: ValueRef):
             case "br":
                 match translate_instruction_br(instruction):
                     case str(string):
-                        exit_register = f"BlockExit{{{string}}}"
+                        exit_register = f"BlockExit{{{string}}} |"
                     case tuple(tup):
                         brinstr, closure, exit1, exit2 = tup
                         closures += closure
                         block_body += [ output_bigraph_simple_node(brinstr) ]
-                        exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}}"
+                        exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}} |"
             case "call":
                 dependent_func += [instruction.name]
                 instruction_node, closure = translate_instruction_call(str(instruction))
@@ -137,10 +137,10 @@ def function_cfg_node(block: ValueRef):
 f"""
 Block.(
     BlockEntry{{{entrance_register}}} |
-    {exit_register} |
+    {exit_register}
     Body.(
-        {''' |
-        '''.join(block_body)}
+        {join_or_1(''' |
+        ''',block_body)}
     )
 )
 """, dependent_func, closures
@@ -364,11 +364,11 @@ f"""
 Node.(
     NodeType.Simple |
     Body.{info["opcode"]} |
-    Read.({" | ".join(info["read"])}) |
-    Write.({" | ".join(info["write"])}) |
+    Read.({join_or_1(" | ",info["read"])}) |
+    Write.({join_or_1(" | ",info["write"])}) |
     Extra.(
-        DataTypes.({" | ".join(info["type"])}) |
-        Options.({" | ".join(info["options"])})    
+        DataTypes.({join_or_1(" | ",info["type"])}) |
+        Options.({join_or_1(" | ",info["options"])})    
     )
 )
 """
@@ -413,7 +413,12 @@ def create_address(number_string, order=-1):
 
     return f"Const({order},{number_string})", ""
 
-
+def join_or_1(join_string, join_list):
+    ret = join_string.join(join_list)
+    if not ret:
+        return "1"
+    else:
+        return ret
 
 main("example 2.ll")
     
