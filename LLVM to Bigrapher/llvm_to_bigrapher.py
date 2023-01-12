@@ -19,22 +19,29 @@ def main(file_name):
         ## Body
         function_calls = []
         cfg_f = []
+        closures = " "
         for block in function.blocks:
-            block_cfg, block_func_calls = function_cfg_node(block)
+            block_cfg, block_func_calls, closure = function_cfg_node(block)
+            closures += closure
             cfg_f += [block_cfg]
             function_calls += block_func_calls
 
+        
         function_reads = []
         function_types = [transform_type(function.type)]
 
         for n, argument in enumerate(function.arguments):
             argument = str(argument).split()
-            function_reads += [create_address(argument[1], n)]
+            read_address, closure = create_address(argument[1], n)
+            closures += closure
+            function_reads += [read_address]
             function_types += [transform_type(argument[0], n)]
-
+        
+        closures = set(closures.split())
 
         ipg += [ function_ipg_node(function, function_calls) ]
-        cfg += [ f"Cfgf{{cfg_ipg_{function.name}}}.( \n"\
+        cfg += [ " ".join(closures) + "\n" \
+             + f"Cfgf{{cfg_ipg_{function.name}}}.( \n"\
              + "Read.(" + " | ".join(function_reads) + ")\n" \
              + "DataTypes.(" + " | ".join(function_types) + ")\n" \
              + " | ".join(cfg_f) + " )"]
@@ -77,38 +84,52 @@ def function_cfg_node(block: ValueRef):
         e = int(str(instruction).split()[0][1:])
         entrance_register = "cfg_" + str(e-1)
         break
-    
+    closures = " "
     for instruction in block.instructions:
         match instruction.opcode:
             case "add" | "sub" | "mul" | "shl" | "srem" | "urem" :
-                block_body += [ output_bigraph_simple_node(translate_instruction_quad(str(instruction))) ]
+                instruction_node, closure = translate_instruction_quad(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "load":
-                block_body += [ output_bigraph_simple_node(translate_instruction_load(str(instruction))) ]
+                instruction_node, closure = translate_instruction_load(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "store":
-                block_body += [ output_bigraph_simple_node(translate_instruction_store(str(instruction))) ]
+                instruction_node, closure = translate_instruction_store(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "br":
                 match translate_instruction_br(instruction):
                     case str(string):
                         exit_register = f"BlockExit{{{string}}}"
                     case tuple(tup):
-                        brinstr, exit1, exit2 = tup
+                        brinstr, closure, exit1, exit2 = tup
+                        closures += closure
                         block_body += [ output_bigraph_simple_node(brinstr) ]
                         exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}}"
             case "call":
-                instruction_str = str(instruction)
-                start = instruction_str.find("@")
-                end = instruction_str.find("(")
-                dependent_func += [instruction_str[start+1:end]]
-                block_body += [ output_bigraph_simple_node(translate_instruction_call(str(instruction))) ]
+                dependent_func += [instruction.name]
+                instruction_node, closure = translate_instruction_call(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
 
             case "icmp":
-                block_body += [ output_bigraph_simple_node(translate_instruction_icmp(str(instruction))) ]
+                instruction_node, closure = translate_instruction_icmp(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "ret":
-                block_body += [ output_bigraph_simple_node(translate_instruction_ret(str(instruction))) ]
+                instruction_node, closure = translate_instruction_ret(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "bitcast":
-                block_body += [ output_bigraph_simple_node(translate_instruction_bitcast(str(instruction))) ]
+                instruction_node, closure = translate_instruction_bitcast(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "alloca":
-                block_body += [ output_bigraph_simple_node(translate_instruction_alloca(str(instruction))) ]
+                instruction_node, closure = translate_instruction_alloca(str(instruction))
+                closures += closure
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
             case other:
                 print(f"Unknown instruction {other}")
 
@@ -122,7 +143,7 @@ Block.(
         '''.join(block_body)}
     )
 )
-""", dependent_func
+""", dependent_func, closures
 
 
 
@@ -166,19 +187,26 @@ def translate_instruction_call(instruction):
 
     
     instruction_info["opcode"] = "Call"
+    closures = ""
     if instruction[0][0] == "%":
-        instruction_info["write"] = [create_address(instruction[0])]
+        write_address, closure = create_address(instruction[0])
+        closures += closure
+        instruction_info["write"] = [write_address]
     else:
         instruction_info["write"] = []
     instruction_info["type"] = [ transform_type(instruction[type_index]) ]
-    instruction_info["read"] = [ create_address(instruction[type_index+1], 0) ]
+    read_address, closure = create_address(instruction[type_index+1], 0)
+    closures += closure
+    instruction_info["read"] = [ read_address ]
     for n, i in enumerate(instruction[type_index + 2:]):
         if i[0] == "#":
             break
         if n%2 == 0:
             instruction_info["type"] += [transform_type(i, n+1)]
         else:
-            instruction_info["read"] += [create_address(i[:-1], n)]
+            read_address, closure = create_address(i[:-1], n)
+            closures += closure
+            instruction_info["read"] += [read_address]
     
     
     call_index -= 1
@@ -186,27 +214,33 @@ def translate_instruction_call(instruction):
         instruction_info["options"] += [transform_option(instruction[call_index])]
         call_index -= 1
     
-    return instruction_info
+    return instruction_info, closure
 
 def translate_instruction_alloca(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Alloca"
-    instruction_info["write"] = [create_address(instruction[0])]
+    write_address, closure = create_address(instruction[0])
+    instruction_info["write"] = [write_address]
     instruction_info["read"] = [ ]
     instruction_info["type"] = [ transform_type(instruction[3][:-1])  ]
     instruction_info["options"] = []
-    return instruction_info
+    return instruction_info, closure
 
 def translate_instruction_bitcast(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Bitcast"
-    instruction_info["write"] = [create_address(instruction[0])]
-    instruction_info["read"] = [create_address(instruction[4])]
+    closures = ""
+    write_address, closure = create_address(instruction[0])
+    closures += closure
+    instruction_info["write"] = [write_address]
+    read_address, closure = create_address(instruction[4])
+    closures += closure
+    instruction_info["read"] = [read_address]
     instruction_info["type"] = [ transform_type(instruction[4], 1), transform_type(instruction[6], 2) ]
     instruction_info["options"] = []
-    return instruction_info
+    return instruction_info, closures
 
 
 
@@ -215,21 +249,29 @@ def translate_instruction_ret(instruction):
     instruction_info = {}
     instruction_info["opcode"] = "Ret"
     instruction_info["write"] = []
-    instruction_info["read"] = [ create_address(instruction[2]) ]
+    read_address, closure = create_address(instruction[2])
+    instruction_info["read"] = [ read_address ]
     instruction_info["type"] = [ transform_type(instruction[1])  ]
     instruction_info["options"] = []
-    return instruction_info
+    return instruction_info, closure
 
 
 def translate_instruction_icmp(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Icmp"
-    instruction_info["write"] = [create_address(instruction[0])]
-    instruction_info["read"] = [ create_address(instruction[-2], 1), create_address(instruction[-1], 2)]
+    closures = ""
+    write_address, closure = create_address(instruction[0])
+    closures += closure
+    instruction_info["write"] = [write_address]
+    read_address1, closure = create_address(instruction[-2], 1)
+    closures += closure
+    read_address2, closure = create_address(instruction[-1], 2)
+    closures += closure
+    instruction_info["read"] = [ read_address1 , read_address2]
     instruction_info["type"] = [ transform_type(instruction[4]) ]
     instruction_info["options"] = [transform_option(instruction[3])]
-    return instruction_info
+    return instruction_info, closures
 
 def translate_instruction_br(instruction):
     instruction = str(instruction)
@@ -238,10 +280,13 @@ def translate_instruction_br(instruction):
         instruction_info = {}
         instruction_info["opcode"] = "Br"
         instruction_info["write"] = []
-        instruction_info["read"] = [ create_address(instruction[2]) ]
+        closures = ""
+        read_address, closure = create_address(instruction[2])
+        closures += closure
+        instruction_info["read"] = [ read_address ]
         instruction_info["type"] = [  ]
         instruction_info["options"] = []
-        return instruction_info, "cfg_" + instruction[4][1:-1], "cfg_" + instruction[6][1:]
+        return instruction_info, closures, "cfg_" + instruction[4][1:-1], "cfg_" + instruction[6][1:]
     else:
         return "cfg_" + instruction[2][1:]
 
@@ -250,23 +295,33 @@ def translate_instruction_load(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Load"
-    instruction_info["write"] = [ create_address(instruction[0]) ]
-    instruction_info["read"] = [ create_address(instruction[-3]) ]
+    closures = ""
+    write_addres, closure = create_address(instruction[0])
+    closures += closure
+    instruction_info["write"] = [ write_addres  ]
+    read_address, closure = create_address(instruction[-3])
+    closures += closure
+    instruction_info["read"] = [ read_address ]
     instruction_info["type"] = [ transform_type(instruction[3][:-1], 1), transform_type(instruction[4], 2) ]
     instruction_info["options"] = []
 
-    return instruction_info
+    return instruction_info, closures
 
 def translate_instruction_store(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = "Store"
-    instruction_info["write"] = [ create_address(instruction[-3]) ]
-    instruction_info["read"] = [ create_address(instruction[2]) ]
+    closures = ""
+    write_addres, closure = create_address(instruction[-3]) 
+    closures += closure
+    instruction_info["write"] = [ write_addres ]
+    read_addres, closure = create_address(instruction[2])
+    closures += closure
+    instruction_info["read"] = [ read_addres ]
     instruction_info["type"] = [ transform_type(instruction[1], 1), transform_type(instruction[3], 2)]
     instruction_info["options"] = []
 
-    return instruction_info
+    return instruction_info, closures
 
 def translate_instruction_quad(instruction):
     """
@@ -284,8 +339,15 @@ def translate_instruction_quad(instruction):
     instruction = instruction.split()
     instruction_info = {}
     instruction_info["opcode"] = instruction[2].capitalize()
-    instruction_info["write"] = [ create_address(instruction[0]) ]
-    instruction_info["read"] = [ create_address(instruction[-2], 1) , create_address(instruction[-1], 2) ]
+    write_address, closure = create_address(instruction[0])
+    closures = ""
+    closures += closure
+    instruction_info["write"] = [ write_address ]
+    read_address1, closure = create_address(instruction[-2], 1)
+    closures += closure
+    read_address2, closure = create_address(instruction[-1], 2)
+    closures+= closure
+    instruction_info["read"] = [ read_address1 , read_address2 ]
     instruction_info["type"] = [ transform_type(instruction[-3]) ]
     if instruction[-4] != instruction[2]:
         instruction_info["options"] = [transform_option(instruction[-4])]
@@ -294,7 +356,7 @@ def translate_instruction_quad(instruction):
     else:
         instruction_info["options"] = []
 
-    return instruction_info
+    return instruction_info, closures
     
 def output_bigraph_simple_node(info):
     return\
@@ -323,7 +385,7 @@ def create_address(number_string, order=-1):
         if number_string[-1] == ",":
             number_string = number_string[:-1]
         label = "label_" + number_string[1:]
-        return f"Label({order}){{{label}}}"        
+        return f"Label({order}){{{label}}}", " /" + label    
     
     if number_string[0] == "%":
         for i in number_string:
@@ -347,9 +409,9 @@ def create_address(number_string, order=-1):
                 return_string += "eight"
             elif i == "9":
                 return_string += "nine"
-        return f"Adr({order}){{{return_string}}}"
+        return f"Adr({order}){{{return_string}}}", " /" + return_string
 
-    return f"Const({order},{number_string})"
+    return f"Const({order},{number_string})", ""
 
 
 
