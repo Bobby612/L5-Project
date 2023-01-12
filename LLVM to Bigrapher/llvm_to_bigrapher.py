@@ -5,11 +5,11 @@ from llvmlite.binding.value import ValueRef
 
 
 def main(file_name):
-    llvm_bitcode = ""
-    with open(file_name, "rb") as f:
-        llvm_bitcode = f.read()
+    llvm_assembly = ""
+    with open(file_name, "r") as f:
+        llvm_assembly = f.read()
 
-    llvm_module = llvm.parse_bitcode(llvm_bitcode)
+    llvm_module = llvm.parse_assembly(llvm_assembly)
     llvm_module.verify()
 
     ipg = []
@@ -24,8 +24,20 @@ def main(file_name):
             cfg_f += [block_cfg]
             function_calls += block_func_calls
 
-        ipg += [ function_ipg_node(function.name, function_calls) ]
-        cfg += [ f"Cfgf{{cfg_ipg_{function.name}}}.( " + " | ".join(cfg_f) + " )"]
+        function_reads = []
+        function_types = [transform_type(function.type)]
+
+        for n, argument in enumerate(function.arguments):
+            argument = str(argument).split()
+            function_reads += [create_address(argument[1], n)]
+            function_types += [transform_type(argument[0], n)]
+
+
+        ipg += [ function_ipg_node(function, function_calls) ]
+        cfg += [ f"Cfgf{{cfg_ipg_{function.name}}}.( \n"\
+             + "Read.(" + " | ".join(function_reads) + ")\n" \
+             + "DataTypes.(" + " | ".join(function_types) + ")\n" \
+             + " | ".join(cfg_f) + " )"]
 
     ipg = "Ipg.(\n" \
         + " |\n".join(ipg) \
@@ -116,7 +128,8 @@ Block.(
 
 
 
-def function_ipg_node(function_name, function_dependents):
+def function_ipg_node(function: ValueRef, function_dependents):
+    function_name = function.name
     block_exit = []
     for dependent in function_dependents:
         block_exit += [ f"BlockExit{{ipg_{dependent}}}" ]
@@ -340,5 +353,5 @@ def create_address(number_string, order=-1):
 
 
 
-main("example 2.bc")
+main("example 2.ll")
     
