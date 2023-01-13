@@ -4,9 +4,11 @@ ctrl Cfg = 0;
 
 ctrl Function = 0;
 ctrl CfgBlock = 1;
+ctrl Block = 0;
 
-ctrl BlockEntry = 1;
-ctrl BlockExit = 1;
+atomic ctrl BlockEntry = 1;
+atomic ctrl BlockExit = 1;
+atomic fun ctrl BlockExit_ord(i) = 1;
 
 ctrl Cfgf = 1; 
 
