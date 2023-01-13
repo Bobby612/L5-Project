@@ -196,7 +196,8 @@ def translate_instruction_call(instruction):
         instruction_info["write"] = [write_address]
     else:
         instruction_info["write"] = []
-    instruction_info["type"] = [ transform_type(instruction[type_index]) ]
+    ## For now function types don't work
+    instruction_info["type"] = [] # [ transform_type(instruction[type_index]) ]
     read_address, closure = create_address(instruction[type_index+1], 0)
     closures += closure
     instruction_info["read"] = [ read_address ]
