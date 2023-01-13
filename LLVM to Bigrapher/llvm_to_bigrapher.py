@@ -54,7 +54,9 @@ def main(file_name):
         + join_or_1(" |\n",cfg) \
         + "    )"
     
-    print(ipg + "\n||\n" + cfg)
+    bigraph = ipg + "\n||\n" + cfg
+    bigraph = bigraph.replace("*", "x")
+    print(bigraph)
 
 
     # for var in llvm_module.global_variables:
@@ -238,7 +240,7 @@ def translate_instruction_bitcast(instruction):
     read_address, closure = create_address(instruction[4])
     closures += closure
     instruction_info["read"] = [read_address]
-    instruction_info["type"] = [ transform_type(instruction[4], 1), transform_type(instruction[6], 2) ]
+    instruction_info["type"] = [ transform_type(instruction[3], 1), transform_type(instruction[6], 2) ]
     instruction_info["options"] = []
     return instruction_info, closures
 
@@ -411,6 +413,9 @@ def create_address(number_string, order=-1):
                 return_string += "nine"
         return f"Adr({order}){{{return_string}}}", " /" + return_string
 
+    if not str.isdigit(number_string[-1]):
+        number_string = number_string[:-1]
+    
     return f"Const({order},{number_string})", ""
 
 def join_or_1(join_string, join_list):
