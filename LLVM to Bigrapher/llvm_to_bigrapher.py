@@ -14,21 +14,25 @@ def main(file_name):
 
     ipg = []
     cfg = []
+    top_level_closures = set()
 
     for function in llvm_module.functions :
         ## Body
         function_calls = []
         cfg_f = []
         closures = " "
+        top_level_closures.update({ f" /cfg_ipg_{function.name}", f" /ipg_{function.name}" } )
         for block in function.blocks:
-            block_cfg, block_func_calls, closure = function_cfg_node(block)
+            block_cfg, block_func_calls, closure, tl_closure = function_cfg_node(block)
             closures += closure
+            top_level_closures.update(tl_closure)
             cfg_f += [block_cfg]
             function_calls += block_func_calls
 
         
         function_reads = []
-        function_types = [transform_type(function.type)]
+        # For now function types don't work
+        function_types = [] # [transform_type(function.type)]
 
         for n, argument in enumerate(function.arguments):
             argument = str(argument).split()
@@ -54,7 +58,7 @@ def main(file_name):
         + join_or_1(" |\n",cfg) \
         + "    )"
     
-    bigraph = ipg + "\n||\n" + cfg
+    bigraph = " ".join(top_level_closures) + "(\n" + ipg + "\n||\n" + cfg + "\n)"
     bigraph = bigraph.replace("*", "x")
     print(bigraph)
 
@@ -82,9 +86,11 @@ def function_cfg_node(block: ValueRef):
     exit_register = ""
     block_body = []
     dependent_func = []
+    top_level_closures = set()
     for instruction in block.instructions:
         e = int(str(instruction).split()[0][1:])
         entrance_register = "cfg_" + str(e-1)
+        top_level_closures.update({" /" + entrance_register})
         break
     closures = " "
     for instruction in block.instructions:
@@ -105,13 +111,19 @@ def function_cfg_node(block: ValueRef):
                 match translate_instruction_br(instruction):
                     case str(string):
                         exit_register = f"BlockExit{{{string}}} |"
+                        top_level_closures.update({ " /" + string })
                     case tuple(tup):
                         brinstr, closure, exit1, exit2 = tup
                         closures += closure
+                        top_level_closures.update({ " /" + exit1, " /" + exit2})
                         block_body += [ output_bigraph_simple_node(brinstr) ]
                         exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}} |"
             case "call":
-                dependent_func += [instruction.name]
+                instruction_string = str(instruction)
+                i = instruction_string.index("@") + 1
+                j = instruction_string.index("(") 
+                dependent_func += [instruction_string[i:j]]
+
                 instruction_node, closure = translate_instruction_call(str(instruction))
                 closures += closure
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
@@ -145,7 +157,7 @@ Block.(
         ''',block_body)}
     )
 )
-""", dependent_func, closures
+""", dependent_func, closures, top_level_closures
 
 
 
@@ -196,8 +208,7 @@ def translate_instruction_call(instruction):
         instruction_info["write"] = [write_address]
     else:
         instruction_info["write"] = []
-    ## For now function types don't work
-    instruction_info["type"] = [] # [ transform_type(instruction[type_index]) ]
+    instruction_info["type"] = [ transform_type(instruction[type_index]) ]
     read_address, closure = create_address(instruction[type_index+1], 0)
     closures += closure
     instruction_info["read"] = [ read_address ]
@@ -217,7 +228,7 @@ def translate_instruction_call(instruction):
         instruction_info["options"] += [transform_option(instruction[call_index])]
         call_index -= 1
     
-    return instruction_info, closure
+    return instruction_info, closures
 
 def translate_instruction_alloca(instruction):
     instruction = instruction.split()

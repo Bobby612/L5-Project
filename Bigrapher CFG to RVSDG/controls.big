@@ -3,7 +3,7 @@ ctrl Ipg = 0;
 ctrl Cfg = 0;
 
 ctrl Function = 0;
-ctrl CfgBlock = 1;
+atomic ctrl CfgBlock = 1;
 ctrl Block = 0;
 
 atomic ctrl BlockEntry = 1;
