@@ -11,7 +11,70 @@ def main(file_name):
     llvm_module.verify()
 
     for global_variable in llvm_module.global_variables:
-        print(parse_global_variable(global_variable)[0])
+        pass
+        # print(parse_global_variable(global_variable)[0])
+    
+    for function in llvm_module.functions:
+        parse_function(function)
+
+def parse_function(function: ValueRef):
+    func_type = function.type
+    export_name = function.name
+    export = ["Adr(-1){state_address}"]
+    closed_links = ["state_address"]
+    if not str(func_type) == "void":
+        export += "Adr(-2){return_address}"
+        closed_links += ["return_address"]
+    
+    blocks = []
+    labels = []
+    addresses = []
+
+    read_labels = []
+    import_labels_adr = []
+
+
+    for b in function.blocks:
+        block, labels, address = parse_block(b, labels)
+        blocks += [block]
+        addresses += address
+    
+    import_function_itself = ""
+    if not blocks:
+        read_labels  += f"Label(-1){{label_read_function_{export_name}}}"
+        import_function_itself = f"label_read_function_{export_name}"
+
+    for i, l in enumerate(labels):
+        read_labels += [f"Label({i}){{label_write_{l}}}"]
+        import_labels_adr += [f"Label({i}){{label_import_{l}}}"]
+        closed_links += [ f"label_import_{l}"]
+
+    for a in addresses:
+        import_labels_adr += [f"Adr({a[1:]}){{label_import_{a[1:]}}}"]
+        closed_links += [f"label_import_{a[1:]}"]
+
+
+
+    return \
+f"""
+{" /".join(closed_links)}
+Node.(
+    NodeType.Lambda |
+    Read.({join_or_1(" | ", read_labels)}) |
+    Import.({join_or_1(import_labels_adr)}) |
+    Body.Region(0).(
+        {join_or_1(" | \n", blocks)}
+    )
+    Extra.(
+        DataTypes.({transform_type(func_type)})
+    )
+    Export.({join_or_1(" | ", export)})
+    Write.Label(0){{label_write_{export_name}}}
+)
+""", f"label_write_{export_name}", import_function_itself
+
+def parse_block(block:ValueRef, labels):
+    pass
 
 def parse_global_variable(global_variable:ValueRef):
     globa_variable_str = str(global_variable)
@@ -44,7 +107,7 @@ Node.(
     Export.Label(0){{label_export_{export_name}}} |
     Write.Label(0){{label_write_{export_name}}}
 )
-""",  f"/label_write_{export_name}"    
+""",  f"label_write_{export_name}"    
 
     else:
         literal = globa_variable_str.split(var_type)[-1]
