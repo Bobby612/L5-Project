@@ -15,7 +15,7 @@ def main(file_name):
         # print(parse_global_variable(global_variable)[0])
     
     for function in llvm_module.functions:
-        parse_function(function)
+        print(parse_function(function)[0])
 
 def parse_function(function: ValueRef):
     func_type = function.type
@@ -23,7 +23,7 @@ def parse_function(function: ValueRef):
     export = ["Adr(-1){state_address}"]
     closed_links = ["state_address"]
     if not str(func_type) == "void":
-        export += "Adr(-2){return_address}"
+        export += ["Adr(-2){return_address}"]
         closed_links += ["return_address"]
     
     blocks = []
@@ -35,14 +35,16 @@ def parse_function(function: ValueRef):
 
 
     for b in function.blocks:
-        block, labels, address = parse_block(b, labels)
+        block, labels, address, cfg_node_entrance = parse_block(b, labels)
         blocks += [block]
         addresses += address
+        closed_links += [cfg_node_entrance]
     
+    labels = list(map(lambda x : x.replace("_","__").replace(".","_"), labels))
     import_function_itself = ""
     if not blocks:
-        read_labels  += f"Label(-1){{label_read_function_{export_name}}}"
-        import_function_itself = f"label_read_function_{export_name}"
+        read_labels  += [f"Label(-1){{label_read_function_{export_name}}}"]
+        import_function_itself = [f"label_read_function_{export_name}"]
 
     for i, l in enumerate(labels):
         read_labels += [f"Label({i}){{label_write_{l}}}"]
@@ -61,9 +63,10 @@ f"""
 Node.(
     NodeType.Lambda |
     Read.({join_or_1(" | ", read_labels)}) |
-    Import.({join_or_1(import_labels_adr)}) |
+    Import.({join_or_1(" | ", import_labels_adr)}) |
     Body.Region(0).(
-        {join_or_1(" | \n", blocks)}
+        {join_or_1(''' |
+        ''', blocks)}
     )
     Extra.(
         DataTypes.({transform_type(func_type)})
@@ -73,8 +76,203 @@ Node.(
 )
 """, f"label_write_{export_name}", import_function_itself
 
-def parse_block(block:ValueRef, labels):
-    pass
+def parse_block(block:ValueRef, labels:list):
+    entrance_register = ""
+    exit_register = ""
+    state = 0
+
+    function_addresses = []
+
+    block_body = []
+    import_address = set()
+    import_labels = set()
+    export_address = set()
+    export_labels = set()
+
+    closures = set()
+
+    for instruction in block.instructions:
+        e = int(str(instruction).split()[0][1:])
+        entrance_register = "cfg_" + str(e-1)
+        break
+
+    for instruction in block.instructions:
+        match instruction.opcode:
+            case "add" | "sub" | "mul" | "shl" | "srem" | "urem" :
+                instruction_node, closure = translate_instruction_quad(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+            case "load":
+                instruction_node, closure, load_address, is_label = translate_instruction_load(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+                if is_label:
+                    if store_address in labels:
+                        import_labels.add((store_address, labels.index(store_address)))
+                    else:
+                        labels.append(store_address)
+                        import_labels.add((store_address, labels.index(store_address)))
+                else:
+                    import_address.add(load_address)
+
+            case "store":
+                instruction_node, closure, store_address, is_label = translate_instruction_store(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+                if is_label:
+                    if store_address in labels:
+                        export_labels.add((store_address, labels.index(store_address)))
+                    else:
+                        labels.append(store_address)
+                        export_labels.add((store_address, labels.index(store_address)))
+                else:
+                    export_address.add(store_address)
+                
+            case "br":
+                match translate_instruction_br(instruction):
+                    case str(string):
+                        exit_register = f"BlockExit{{{string}}} |"
+                    case tuple(tup):
+                        brinstr, closure, exit1, exit2 = tup
+                        closures.add(closure)
+                        block_body += [ output_bigraph_simple_node(brinstr) ]
+                        exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}} |"
+            case "call":
+                instruction_string = str(instruction)
+                i = instruction_string.index("@") + 1
+                j = instruction_string.index("(")
+                function_label = instruction_string[i:j]
+
+                if function_label in labels:
+                    import_labels.add((function_label, labels.index(function_label)))
+                else:
+                    labels.append(function_label)
+                    import_labels.add((function_label, labels.index(function_label)))
+                instruction_node, closure, label = translate_instruction_call_complex(instruction, function_label, state)
+                block_body += instruction_node
+                closures.add(closure)
+
+                for l in label:
+                    if l in labels:
+                        import_labels.add((l, labels.index(l)))
+                    else:
+                        labels.append(l)
+                        import_labels.add((l, labels.index(l)))
+
+
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+
+                state += 0
+
+            case "icmp":
+                instruction_node, closure = translate_instruction_icmp(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+            case "ret":
+                instruction_node, closure = translate_instruction_ret(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+            case "bitcast":
+                instruction_node, closure = translate_instruction_bitcast(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+            case "alloca":
+                instruction_node, closure, function_address = translate_instruction_alloca(str(instruction))
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node) ]
+                function_addresses.append(function_address)
+            case other:
+                print(f"Unknown instruction {other}")
+
+    import_address = list(import_address)
+    import_address = list(map(create_address2, import_address))
+    import_labels = list(import_labels)
+    import_labels = list(map(create_label2, import_labels))
+
+    export_address = list(export_address)
+    export_address = list(map(create_address2, export_address))
+    export_labels = list(export_labels)
+    export_labels = list(map(create_label2, export_labels))
+    return\
+f"""
+{" ".join(list(closures))}
+Block.(
+    BlockEntry{{{entrance_register}}} |
+    {exit_register}
+    Import.({join_or_1(" | ", import_address + import_labels)})
+    Body.Region(0).(
+        {join_or_1(''' |
+        ''', block_body)}
+    )
+    Export.({join_or_1(" | ", export_address + export_labels)})
+
+)
+""", labels, function_addresses, entrance_register
+
+def create_address2(address):
+    if address[-1] not in "1234567890":
+        address = address[:-1]
+    return create_address("%" + address,int(address))[0]
+
+def create_label2(label):
+    return create_address("@" + label[0].replace("_","__").replace(".", "_"), label[1])[0]
+
+def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int):
+    instruction_2_split = str(instruction).split(name)
+    call_info = instruction_2_split[0]
+    closures = f" /state_{state}"
+    labels = []
+
+    instruction_info = {}
+    instruction_info["opcode"] = "Call"
+    instruction_info["write"] = [f"State{{state_{state+1}}}"]
+    if call_info[0][0] == "%":
+        adr, closure = create_address(call_info[0])
+        closures += closure
+        instruction_info["write"] += [ adr ]
+        
+    
+    instruction_info["type"] = []
+    instruction_info["read"] = [ f"State{{state_{state}}}" ]
+    j = 0
+    gep = False
+    gep_expr = ""
+    for i in instruction_2_split[1].split():
+        if i[0] == "@":
+            adr, closure = create_address(i,j)
+            closures += closure
+            instruction_info["read"] += [ adr ]
+            labels += [i[:-1]]
+        if j%2 == 0:
+            instruction_info["type"] += [transform_type(i,j)]
+            j += 1
+        else:
+            if not gep:
+                if i == "getelementptr":
+                    gep = True
+                    gep_expr += i
+                else:
+                    adr, closure = create_address(i,j)
+                    closures += closure
+                    instruction_info["read"] += [ adr ]
+                    j += 1
+            else:
+                if i[-1] == ")" or i[-2:] == "),":
+                    gep = False
+                    instruction_info["read"] += [ f'Const({j},"{gep_expr + i}")' ]
+                    gep_expr = ""
+                    j += 1
+                else:
+                    gep_expr += i
+
+
+    
+    instruction_info["type"] += [ transform_type(instruction.type) ]
+    instruction_info["options"] = []
+
+    return instruction_info, closure, labels
+
+
 
 def parse_global_variable(global_variable:ValueRef):
     globa_variable_str = str(global_variable)
@@ -327,7 +525,7 @@ Function.(
     # instruction_info["type"] = [  ]
     # instruction_info["options"] = []
 
-def translate_instruction_call(instruction):
+def translate_instruction_call(instruction, state):
     instruction = instruction.replace("("," ").split()
     call_index = instruction.index("call")
     instruction_info = {}
@@ -360,6 +558,9 @@ def translate_instruction_call(instruction):
             read_address, closure = create_address(i[:-1], n)
             closures += closure
             instruction_info["read"] += [read_address]
+
+    instruction_info["read"] += [ f"State{{state_{state}}}" ]
+    instruction_info["write"] += [ f"State{{state_{state+1}}}"]
     
     
     call_index -= 1
@@ -391,7 +592,7 @@ def translate_instruction_alloca(instruction):
     instruction_info["read"] = [ ]
     instruction_info["type"] = [ transform_type(instruction[3][:-1])  ]
     instruction_info["options"] = []
-    return instruction_info, closure
+    return instruction_info, closure, instruction[0][1:]
 
 def translate_instruction_bitcast(instruction):
     instruction = instruction.split()
@@ -471,7 +672,11 @@ def translate_instruction_load(instruction):
     instruction_info["type"] = [ transform_type(instruction[3][:-1], 1), transform_type(instruction[4], 2) ]
     instruction_info["options"] = []
 
-    return instruction_info, closures
+    label = False
+    if instruction[-3][0] == "@":
+        label = True
+
+    return instruction_info, closures, instruction[-3][1:], label
 
 def translate_instruction_store(instruction):
     instruction = instruction.split()
@@ -487,7 +692,11 @@ def translate_instruction_store(instruction):
     instruction_info["type"] = [ transform_type(instruction[1], 1), transform_type(instruction[3], 2)]
     instruction_info["options"] = []
 
-    return instruction_info, closures
+    label = False
+    if instruction[-3][0] == "@":
+        label = True
+
+    return instruction_info, closures, instruction[-3][1:], label
 
 def translate_instruction_quad(instruction):
     """
