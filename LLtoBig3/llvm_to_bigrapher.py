@@ -107,11 +107,11 @@ def parse_block(block:ValueRef, labels:list):
                 closures.add(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
                 if is_label:
-                    if store_address in labels:
-                        import_labels.add((store_address, labels.index(store_address)))
+                    if load_address in labels:
+                        import_labels.add((load_address, labels.index(load_address)))
                     else:
-                        labels.append(store_address)
-                        import_labels.add((store_address, labels.index(store_address)))
+                        labels.append(load_address)
+                        import_labels.add((load_address, labels.index(load_address)))
                 else:
                     import_address.add(load_address)
 
@@ -270,7 +270,7 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
     instruction_info["type"] += [ transform_type(instruction.type) ]
     instruction_info["options"] = []
 
-    return instruction_info, closure, labels
+    return instruction_info, closures, labels
 
 
 
@@ -286,9 +286,8 @@ def parse_global_variable(global_variable:ValueRef):
     options += [ transform_alignment(alignment) ]
 
     if var_type[-1] == "*":
-        info, import_name = translate_instruction_getelementptr_asconst(globa_variable_str.split(var_type)[-1])
-        info["read"] += [f"label_import_{import_name}"]
-        info["write"] += [f"label_export_{export_name}"]
+        literal = globa_variable_str.split(var_type)[-1]
+        import_name = globa_variable_str.split(var_type)[-1].split("@")[1].split(",")[0].replace("_", "__").replace(".", "_")
         return \
 f"""
 /label_export{export_name} /label_import_{import_name}
@@ -297,7 +296,15 @@ Node.(
     Read.Label(0){{label_write_{import_name}}} |
     Import.Label(0){{label_import_{import_name}}} |
     Body.Region(0).(
-        {output_bigraph_simple_node(info)}
+            Node.(
+            NodeType.Simple |
+            Body.Literal |
+            Read.Read.( Const(0,"{literal}") | Label(0){{label_import_{import_name}}}
+            Write.(Label(0){{label_export_{export_name}}}) |
+            Extra.(
+                DataTypes.()) |
+                Options.({transform_option(literal)})
+            )
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
@@ -320,11 +327,10 @@ Node.(
         Node.(
             NodeType.Simple |
             Body.Literal |
-            Read.1 |
+            Read.Const(0,"{literal}") |
             Write.(Label(0){{label_export_{export_name}}}) |
             Extra.(
-                DataTypes.()) |
-                Options.({transform_option(literal)})
+                DataTypes.({transform_type(var_type)})) 
             )
     Extra.(
         DataTypes.({transform_type(var_type)}) |
@@ -337,187 +343,6 @@ Node.(
     
 
 
-
-
-    
-
-def main2(file_name):
-    llvm_assembly = ""
-    with open(file_name, "r") as f:
-        llvm_assembly = f.read()
-
-    llvm_module = llvm.parse_assembly(llvm_assembly)
-    llvm_module.verify()
-
-    ipg = []
-    cfg = []
-    top_level_closures = set()
-
-    for function in llvm_module.functions :
-        ## Body
-        function_calls = []
-        cfg_f = []
-        closures = " "
-        top_level_closures.update({ f" /cfg_ipg_{function.name}", f" /ipg_{function.name}" } )
-        for block in function.blocks:
-            block_cfg, block_func_calls, closure, tl_closure = function_cfg_node(block)
-            closures += closure
-            top_level_closures.update(tl_closure)
-            cfg_f += [block_cfg]
-            function_calls += block_func_calls
-
-        
-        function_reads = []
-        # For now function types don't work
-        function_types = [] # [transform_type(function.type)]
-
-        for n, argument in enumerate(function.arguments):
-            argument = str(argument).split()
-            read_address, closure = create_address(argument[1], n)
-            closures += closure
-            function_reads += [read_address]
-            function_types += [transform_type(argument[0], n)]
-        
-        closures = set(closures.split())
-
-        ipg += [ function_ipg_node(function, function_calls) ]
-        cfg += [ " ".join(closures) + "\n" \
-             + f"Cfgf{{cfg_ipg_{function.name}}}.( \n"\
-             + "Read.(" + join_or_1(" | ", function_reads) + ") |\n" \
-             + "DataTypes.(" + join_or_1(" | ",function_types) + ") |\n" \
-             + join_or_1(" | ",cfg_f) + " )"]
-
-    ipg = "Ipg.(\n" \
-        + join_or_1(" |\n",ipg) \
-        + "    )"
-
-    cfg = "Cfg.(\n" \
-        + join_or_1(" |\n",cfg) \
-        + "    )"
-    
-    bigraph = " ".join(top_level_closures) + "(\n" + ipg + "\n||\n" + cfg + "\n)"
-    bigraph = bigraph.replace("*", "x")
-    print(bigraph)
-
-
-    # for var in llvm_module.global_variables:
-    #     print(var)
-
-    
-
-    # for func in llvm_module.functions:
-    #     for block in func.blocks:
-    #         for instruction in block.instructions:
-    #             print(instruction.opcode)
-    #             # match instruction.opcode:
-    #             #     case "load":
-    #             #         print(instruction)
-    #             #     case "add" | "sub" | "mul" | "shl" :
-    #             #         output_bigraph_simple_node(translate_instruction_quad(str(instruction)))
-    #             #     case _:
-    #             #         print("Not load")
-
-
-def function_cfg_node(block: ValueRef):
-    entrance_register = ""
-    exit_register = ""
-    block_body = []
-    dependent_func = []
-    top_level_closures = set()
-    for instruction in block.instructions:
-        e = int(str(instruction).split()[0][1:])
-        entrance_register = "cfg_" + str(e-1)
-        top_level_closures.update({" /" + entrance_register})
-        break
-    closures = " "
-    for instruction in block.instructions:
-        match instruction.opcode:
-            case "add" | "sub" | "mul" | "shl" | "srem" | "urem" :
-                instruction_node, closure = translate_instruction_quad(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case "load":
-                instruction_node, closure = translate_instruction_load(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case "store":
-                instruction_node, closure = translate_instruction_store(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case "br":
-                match translate_instruction_br(instruction):
-                    case str(string):
-                        exit_register = f"BlockExit{{{string}}} |"
-                        top_level_closures.update({ " /" + string })
-                    case tuple(tup):
-                        brinstr, closure, exit1, exit2 = tup
-                        closures += closure
-                        top_level_closures.update({ " /" + exit1, " /" + exit2})
-                        block_body += [ output_bigraph_simple_node(brinstr) ]
-                        exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}} |"
-            case "call":
-                instruction_string = str(instruction)
-                i = instruction_string.index("@") + 1
-                j = instruction_string.index("(") 
-                dependent_func += [instruction_string[i:j]]
-
-                instruction_node, closure = translate_instruction_call(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-
-            case "icmp":
-                instruction_node, closure = translate_instruction_icmp(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case "ret":
-                instruction_node, closure = translate_instruction_ret(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case "bitcast":
-                instruction_node, closure = translate_instruction_bitcast(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case "alloca":
-                instruction_node, closure = translate_instruction_alloca(str(instruction))
-                closures += closure
-                block_body += [ output_bigraph_simple_node(instruction_node) ]
-            case other:
-                print(f"Unknown instruction {other}")
-
-    return\
-f"""
-Block.(
-    BlockEntry{{{entrance_register}}} |
-    {exit_register}
-    Body.(
-        {join_or_1(''' |
-        ''',block_body)}
-    )
-)
-""", dependent_func, closures, top_level_closures
-
-
-
-
-
-def function_ipg_node(function: ValueRef, function_dependents):
-    function_name = function.name
-    block_exit = []
-    for dependent in function_dependents:
-        block_exit += [ f"BlockExit{{ipg_{dependent}}}" ]
-    if block_exit:
-        block_exit = " | ".join(block_exit) + " | "
-    else:
-        block_exit = ""
-    return\
-f"""
-Function.(
-    BlockEntry{{ipg_{function_name}}} |
-    {block_exit}
-    CfgBlock{{cfg_ipg_{function_name}}}
-)
-"""
-
     # instruction_info = {}
     # instruction_info["opcode"] = ""
     # instruction_info["write"] = []
@@ -525,63 +350,10 @@ Function.(
     # instruction_info["type"] = [  ]
     # instruction_info["options"] = []
 
-def translate_instruction_call(instruction, state):
-    instruction = instruction.replace("("," ").split()
-    call_index = instruction.index("call")
-    instruction_info = {}
-    if instruction[call_index+1] == "noalias":
-        type_index = call_index + 2
-        instruction_info["options"] = [ transform_option("noalias")]
-    else:
-        type_index = call_index + 1
-        instruction_info["options"] = [ ]
-
-    
-    instruction_info["opcode"] = "Call"
-    closures = ""
-    if instruction[0][0] == "%":
-        write_address, closure = create_address(instruction[0])
-        closures += closure
-        instruction_info["write"] = [write_address]
-    else:
-        instruction_info["write"] = []
-    instruction_info["type"] = [ transform_type(instruction[type_index]) ]
-    read_address, closure = create_address(instruction[type_index+1], 0)
-    closures += closure
-    instruction_info["read"] = [ read_address ]
-    for n, i in enumerate(instruction[type_index + 2:]):
-        if i[0] == "#":
-            break
-        if n%2 == 0:
-            instruction_info["type"] += [transform_type(i, n+1)]
-        else:
-            read_address, closure = create_address(i[:-1], n)
-            closures += closure
-            instruction_info["read"] += [read_address]
-
-    instruction_info["read"] += [ f"State{{state_{state}}}" ]
-    instruction_info["write"] += [ f"State{{state_{state+1}}}"]
-    
-    
-    call_index -= 1
-    while call_index >= 0 and instruction[call_index] != "=":
-        instruction_info["options"] += [transform_option(instruction[call_index])]
-        call_index -= 1
-    
-    return instruction_info, closures
 
 def translate_instruction_getelementptr(instruction):
     return instruction
 
-        
-def translate_instruction_getelementptr_asconst(instruction):
-    instruction_info = {}
-    instruction_info["opcode"] = "GetElementPtrConst"
-    instruction_info["write"] = []
-    instruction_info["read"] = [ ]
-    instruction_info["type"] = [  ]
-    instruction_info["options"] = []
-    return instruction_info, instruction.split("@")[1].split(",")[0].replace("_", "__").replace(".", "_")
 
 def translate_instruction_alloca(instruction):
     instruction = instruction.split()
