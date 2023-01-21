@@ -74,7 +74,7 @@ def parse_function(function: ValueRef):
         addresses += address
         closed_links += [cfg_node_entrance]
     
-    labels = list(map(lambda x : x.replace("_","__").replace(".","_"), labels))
+    # labels = list(map(lambda x : x.replace("_","__").replace(".","_"), labels))
     import_function_itself = ""
     if not blocks:
         read_labels  += [f"Label(-1){{label_read_function_{export_name}}}"]
@@ -253,7 +253,7 @@ def create_address2(address):
     return create_address("%" + address,int(address))[0]
 
 def create_label2(label):
-    return create_address("@" + label[0].replace("_","__").replace(".", "_"), label[1])[0]
+    return create_address("@" + label[0], label[1])[0]
 
 def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int):
     instruction_2_split = str(instruction).split(name)
@@ -280,7 +280,7 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
             adr, closure = create_address(i,j)
             closures += closure
             instruction_info["read"] += [ adr ]
-            labels += [i[:-1]]
+            labels += [i[1:-1]]
         if j%2 == 0:
             instruction_info["type"] += [transform_type(i,j)]
             j += 1
@@ -593,8 +593,8 @@ def create_address(number_string, order=-1):
     if number_string[0] == "@":
         if number_string[-1] == ",":
             number_string = number_string[:-1]
-        label = "label_" + number_string[1:]
-        return f"Label({order}){{{label}}}", " /" + label    
+        label = "label_" + number_string[1:].replace("_", "__").replace(".", "_")
+        return f"Label({order}){{{label}}}", " /" + label   
     
     if number_string[0] == "%":
         for i in number_string:
