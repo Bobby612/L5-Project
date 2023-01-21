@@ -10,12 +10,46 @@ def main(file_name):
     llvm_module = llvm.parse_assembly(llvm_assembly)
     llvm_module.verify()
 
+    import_functions = []
+    global_function_nodes = []
+    global_variable_nodes = []
+    global_links = []
+
+
     for global_variable in llvm_module.global_variables:
-        pass
-        # print(parse_global_variable(global_variable)[0])
+        gv, lk = parse_global_variable(global_variable)
+
+        global_variable_nodes += [gv]
+        global_links += [lk]
     
     for function in llvm_module.functions:
-        print(parse_function(function)[0])
+        fn, lk, import_function = parse_function(function)
+        global_function_nodes += [fn]
+        global_links += [lk]
+
+        if import_function:
+            import_functions += [import_function]
+
+    import_functions_labels = list(map(create_label2, import_functions))
+    import_labels = list(map(lambda x : "/" + x, import_functions + global_links))
+
+    omega = \
+f"""
+{" ".join(import_labels)}
+Omega.(
+    Import.(
+        {join_or_1(" | ", import_functions_labels )}
+    )
+    Body.Region(0).(
+        {join_or_1(" | ", global_function_nodes)} |
+        {join_or_1(" | ", global_variable_nodes)}
+    )
+    Export.Label(0){{label_write_main}}
+)
+"""
+
+    print(omega)
+
 
 def parse_function(function: ValueRef):
     func_type = function.type
@@ -44,7 +78,7 @@ def parse_function(function: ValueRef):
     import_function_itself = ""
     if not blocks:
         read_labels  += [f"Label(-1){{label_read_function_{export_name}}}"]
-        import_function_itself = [f"label_read_function_{export_name}"]
+        import_function_itself = f"label_read_function_{export_name}"
 
     for i, l in enumerate(labels):
         read_labels += [f"Label({i}){{label_write_{l}}}"]
@@ -59,7 +93,7 @@ def parse_function(function: ValueRef):
 
     return \
 f"""
-{" /".join(closed_links)}
+{" ".join( list(map(lambda x: "/" + x, closed_links)))}
 Node.(
     NodeType.Lambda |
     Read.({join_or_1(" | ", read_labels)}) |
@@ -181,6 +215,10 @@ def parse_block(block:ValueRef, labels:list):
                 closures.add(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
                 function_addresses.append(function_address)
+            case "getelementptr":
+                instruction_node, closure = translate_instruction_getelementptr(instruction)
+                closures.add(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node)]
             case other:
                 print(f"Unknown instruction {other}")
 
@@ -339,7 +377,7 @@ Node.(
     Export.Label(0){{label_export_{export_name}}} |
     Write.Label(0){{label_write_{export_name}}}
 )
-""", f"/label_write_{export_name}"
+""", f"label_write_{export_name}"
     
 
 
@@ -351,8 +389,29 @@ Node.(
     # instruction_info["options"] = []
 
 
-def translate_instruction_getelementptr(instruction):
-    return instruction
+def translate_instruction_getelementptr(instruction:ValueRef):
+    instruction_s = str(instruction)
+    instruction_parts = instruction_s.split(",")
+    closures = " "
+    instruction_info = {}
+    instruction_info["opcode"] = "Getelementptr"
+    address_write, closure = create_address(instruction_parts[0].split()[0])
+    closures += closure
+    instruction_info["write"] = [address_write]
+    address_adr, closure = create_address(instruction_parts[1].split()[1], 1)
+    closures += closure
+    address_ind, closure = create_address(instruction_parts[2].split()[1], 2)
+    closures += closure
+    instruction_info["read"] = [ address_adr  , address_ind ]
+    instruction_info["type"] = [ transform_type(instruction.type), \
+        transform_type(instruction_parts[1].split()[0], 1) ,
+        transform_type(instruction_parts[2].split()[0], 2)]
+    
+    if instruction_parts[0].split()[-2] != instruction.opcode:
+        instruction_info["options"] = [transform_option(instruction_parts[0].split()[-2] )]
+    else:
+        instruction_info["options"] = []
+    return instruction_info, closures
 
 
 def translate_instruction_alloca(instruction):
