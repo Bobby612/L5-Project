@@ -1,6 +1,9 @@
 import llvmlite.binding as llvm
 from llvmlite.ir.instructions import *
 from llvmlite.binding.value import ValueRef
+import json
+
+strings_dict = {}
 
 def main(file_name):
     llvm_assembly = ""
@@ -39,15 +42,16 @@ f"""
 Omega.(
     Import.(
         {join_or_1(" | ", import_functions_labels )}
-    )
+    ) |
     Body.Region(0).(
         {join_or_1(" | ", global_function_nodes)} |
         {join_or_1(" | ", global_variable_nodes)}
-    )
+    ) |
     Export.Label(0){{label_write_main}}
 )
 """
-
+    with open("string_json.json", "w") as f:
+        json.dump(strings_dict, f)
     print(omega)
 
 
@@ -86,8 +90,8 @@ def parse_function(function: ValueRef):
         closed_links += [ f"label_import_{l}"]
 
     for a in addresses:
-        import_labels_adr += [f"Adr({a[1:]}){{label_import_{a[1:]}}}"]
-        closed_links += [f"label_import_{a[1:]}"]
+        import_labels_adr += [f"Adr({a}){{label_import_{a}}}"]
+        closed_links += [f"label_import_{a}"]
 
 
 
@@ -101,11 +105,10 @@ Node.(
     Body.Region(0).(
         {join_or_1(''' |
         ''', blocks)}
-    )
-    Extra.(
-        DataTypes.({transform_type(func_type)})
-    )
-    Export.({join_or_1(" | ", export)})
+    ) |
+    Extra.DataTypes.({transform_type(func_type)}
+    ) |
+    Export.({join_or_1(" | ", export)}) |
     Write.Label(0){{label_write_{export_name}}}
 )
 """, f"label_write_{export_name}", import_function_itself
@@ -175,7 +178,7 @@ def parse_block(block:ValueRef, labels:list):
                 instruction_string = str(instruction)
                 i = instruction_string.index("@") + 1
                 j = instruction_string.index("(")
-                function_label = instruction_string[i:j]
+                function_label = instruction_string[i:j].replace("_","__").replace(".","_")
 
                 if function_label in labels:
                     import_labels.add((function_label, labels.index(function_label)))
@@ -237,11 +240,11 @@ f"""
 Block.(
     BlockEntry{{{entrance_register}}} |
     {exit_register}
-    Import.({join_or_1(" | ", import_address + import_labels)})
+    Import.({join_or_1(" | ", import_address + import_labels)}) |
     Body.Region(0).(
         {join_or_1(''' |
         ''', block_body)}
-    )
+    ) |
     Export.({join_or_1(" | ", export_address + export_labels)})
 
 )
@@ -280,7 +283,7 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
             adr, closure = create_address(i,j)
             closures += closure
             instruction_info["read"] += [ adr ]
-            labels += [i[1:-1]]
+            labels += [closure[2:]]
         if j%2 == 0:
             instruction_info["type"] += [transform_type(i,j)]
             j += 1
@@ -296,8 +299,16 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
                     j += 1
             else:
                 if i[-1] == ")" or i[-2:] == "),":
+
+                    current_string = gep_expr + i
+                    if current_string in strings_dict:
+                        type_no = strings_dict[current_string]
+                    else:
+                        type_no = len(strings_dict)
+                        strings_dict[current_string] = type_no
+
                     gep = False
-                    instruction_info["read"] += [ f'Const({j},"{gep_expr + i}")' ]
+                    instruction_info["read"] += [ f'Const({j},{type_no})' ]
                     gep_expr = ""
                     j += 1
                 else:
@@ -323,8 +334,17 @@ def parse_global_variable(global_variable:ValueRef):
     alignment = globa_variable_str.split(",")[-1]
     options += [ transform_alignment(alignment) ]
 
+
+    literal = globa_variable_str.split(var_type)[-1]
+
+    if literal in strings_dict:
+        type_no = strings_dict[literal]
+    else:
+        type_no = len(strings_dict)
+        strings_dict[literal] = type_no
+    
     if var_type[-1] == "*":
-        literal = globa_variable_str.split(var_type)[-1]
+        
         import_name = globa_variable_str.split(var_type)[-1].split("@")[1].split(",")[0].replace("_", "__").replace(".", "_")
         return \
 f"""
@@ -333,27 +353,22 @@ Node.(
     NodeType.Delta |
     Read.Label(0){{label_write_{import_name}}} |
     Import.Label(0){{label_import_{import_name}}} |
-    Body.Region(0).(
-            Node.(
+    Body.Region(0).Node.(
             NodeType.Simple |
             Body.Literal |
-            Read.Read.( Const(0,"{literal}") | Label(0){{label_import_{import_name}}}
+            Read.( Const(0,{type_no}) | Label(0){{label_import_{import_name}}} ) |
             Write.(Label(0){{label_export_{export_name}}}) |
-            Extra.(
-                DataTypes.()) |
-                Options.({transform_option(literal)})
-            )
+            Extra.DataTypes.({transform_type(var_type)}) ) |
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
-    )
+    ) |
     Export.Label(0){{label_export_{export_name}}} |
     Write.Label(0){{label_write_{export_name}}}
 )
 """,  f"label_write_{export_name}"    
 
     else:
-        literal = globa_variable_str.split(var_type)[-1]
         return \
 f"""
 /label_export{export_name}
@@ -361,19 +376,17 @@ Node.(
     NodeType.Delta |
     Read.1 |
     Import.1 |
-    Body.Region(0).(
-        Node.(
+    Body.Region(0).Node.(
             NodeType.Simple |
             Body.Literal |
-            Read.Const(0,"{literal}") |
+            Read.Const(0,{type_no}) |
             Write.(Label(0){{label_export_{export_name}}}) |
-            Extra.(
-                DataTypes.({transform_type(var_type)})) 
-            )
+            Extra.DataTypes.({transform_type(var_type)}) 
+            ) |
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
-    )
+    ) |
     Export.Label(0){{label_export_{export_name}}} |
     Write.Label(0){{label_write_{export_name}}}
 )
@@ -507,7 +520,7 @@ def translate_instruction_load(instruction):
     if instruction[-3][0] == "@":
         label = True
 
-    return instruction_info, closures, instruction[-3][1:], label
+    return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label
 
 def translate_instruction_store(instruction):
     instruction = instruction.split()
@@ -527,7 +540,7 @@ def translate_instruction_store(instruction):
     if instruction[-3][0] == "@":
         label = True
 
-    return instruction_info, closures, instruction[-3][1:], label
+    return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label
 
 def translate_instruction_quad(instruction):
     """
@@ -580,13 +593,39 @@ Node.(
 """
 
 def transform_type(type_string, type_order=-1):
-    return f"DataType({type_order},\"{type_string}\")"
+    if type(type_string) != str:
+        type_string = str(type_string)
+    if type_string in strings_dict:
+        type_no = strings_dict[type_string]
+    else:
+        type_no = len(strings_dict)
+        strings_dict[type_string] = type_no
+
+    return f"DataType({type_order},{type_no})"
 
 def transform_option(option_string):
-    return f"Option(\"{option_string}\")"
+    if type(option_string) != str:
+        option_string = str(option_string)
+
+    if option_string in strings_dict:
+        type_no = strings_dict[option_string]
+    else:
+        type_no = len(strings_dict)
+        strings_dict[option_string] = type_no
+    
+    return f"Option({type_no})"
 
 def transform_alignment(alignment_string):
-    return f"Alignment(\"{alignment_string}\")"
+    if type(alignment_string) != str:
+        alignment_string = str(alignment_string)
+        
+    if alignment_string in strings_dict:
+        type_no = strings_dict[alignment_string]
+    else:
+        type_no = len(strings_dict)
+        strings_dict[alignment_string] = type_no
+    
+    return f"Alignment({type_no})"
 
 def create_address(number_string, order=-1):
     return_string = ""
