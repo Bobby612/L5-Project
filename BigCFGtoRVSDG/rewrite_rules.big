@@ -211,26 +211,40 @@ fun react ct_while_loop(i, j) =  /y (
 )
     ;
 
+react ct_top_node = /x (
+    Block.(
+        Interface.BlockEntry{x} | 
+        id
+    ) | 
+    Ct.id
+)
+    -->
+    1 |
+    Ct.(
+        CtNode.(
+            CtTopNode |
+            CtBlock(0).Block.id
+        ) | 
+        id
+    )
+    ;
 
 fun react ct_deabstractify(i) = /a (
     CtNode.(
         CtBlock(i).Block.CtAbstract{a} |
         id
     ) ||
-    Ct.(
-        CtNode.(
-            id |
-            CtAbstract{a}
-        ) |
-        id
-    ) 
+    CtNode.(
+        id |
+        CtAbstract{a}
+    )
 )
     -->
     CtNode.(
         id |
         CtBlock(i).CtNode.id
     ) ||
-    Ct.id
+    1
     ;
 
 

@@ -1,9 +1,10 @@
 begin brs
     init cfg;
-    rules = [   {ct_deabstractify(0), ct_deabstractify(1), ct_deabstractify(2)}, 
-                {ct_continuous, ct_if_then_else, 
+    rules = [   (ct_deabstractify(0), ct_deabstractify(1), ct_deabstractify(2)), 
+                (ct_continuous, ct_if_then_else, 
                 ct_if_then(1,2), ct_if_then(2,1),
                 ct_selfloop(1,2), ct_selfloop(2,1),
-                ct_while_loop(1,2), ct_while_loop(2,1)},
+                ct_while_loop(1,2), ct_while_loop(2,1)),
+                {ct_top_node}, ## Make sure one CT is completed before starting another
                 {ct_begin} ];
 end

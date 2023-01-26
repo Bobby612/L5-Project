@@ -68,6 +68,7 @@ atomic ctrl CtIfThenElse = 0;
 atomic ctrl CtSelfLoop = 0;
 atomic ctrl CtIfThen = 0;
 atomic ctrl CtWhileLoop = 0;
+atomic ctrl CtTopNode = 0;
 
 
 
