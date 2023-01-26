@@ -168,12 +168,12 @@ def parse_block(block:ValueRef, labels:list):
             case "br":
                 match translate_instruction_br(instruction):
                     case str(string):
-                        exit_register = f"BlockExit{{{string}}} |"
+                        exit_register = f" | BlockExit{{{string}}}"
                     case tuple(tup):
                         brinstr, closure, exit1, exit2 = tup
                         closures.update(closure)
                         block_body += [ output_bigraph_simple_node(brinstr) ]
-                        exit_register = f"BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}} |"
+                        exit_register = f" | BlockExit_ord(1){{{exit1}}} | BlockExit_ord(2){{{exit2}}}"
             case "call":
                 instruction_string = str(instruction)
                 i = instruction_string.index("@") + 1
@@ -239,8 +239,10 @@ def parse_block(block:ValueRef, labels:list):
 f"""
 {" ".join(list(closures))} /state_{state}
 Block.(
-    BlockEntry{{{entrance_register}}} |
-    {exit_register}
+    Interface.(
+        BlockEntry{{{entrance_register}}} 
+        {exit_register}
+    ) |
     Import.({join_or_1(" | ", import_address + import_labels + [f"State{{state_0}}"])}) |
     Body.Region(0).(
         {join_or_1(''' |

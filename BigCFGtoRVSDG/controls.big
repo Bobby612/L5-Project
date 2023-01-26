@@ -54,3 +54,20 @@ ctrl Block = 0;
 atomic ctrl BlockEntry = 1;
 atomic ctrl BlockExit = 1;
 atomic fun ctrl BlockExit_ord(i) = 1;
+ctrl Interface = 0;
+
+## Control Tree Controls
+ctrl Ct = 0;
+atomic ctrl CtAbstract = 1;
+ctrl CtNode = 0;
+
+fun ctrl CtBlock(i) = 0;
+
+atomic ctrl CtContinuous = 0;
+atomic ctrl CtIfThenElse = 0;
+atomic ctrl CtSelfLoop = 0;
+atomic ctrl CtIfThen = 0;
+atomic ctrl CtWhileLoop = 0;
+
+
+
