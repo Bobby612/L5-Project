@@ -47,7 +47,7 @@ Omega.(
         {join_or_1(" | ", global_function_nodes)} |
         {join_or_1(" | ", global_variable_nodes)}
     ) |
-    Export.Label(0){{label_write_main}}
+    Export.Dedge{{label_write_main}}.Label(0)
 )
 """
     with open("string_json.json", "w") as f:
@@ -58,10 +58,10 @@ Omega.(
 def parse_function(function: ValueRef):
     func_type = function.type
     export_name = function.name
-    export = ["Adr(-1){state_address}"]
+    export = ["Dedge{state_address}.Adr(-1)"]
     closed_links = ["state_address"]
     if not str(func_type) == "void":
-        export += ["Adr(-2){return_address}"]
+        export += ["Dedge{return_address}.Adr(-2)"]
         closed_links += ["return_address"]
     
     blocks = []
@@ -81,16 +81,16 @@ def parse_function(function: ValueRef):
     # labels = list(map(lambda x : x.replace("_","__").replace(".","_"), labels))
     import_function_itself = ""
     if not blocks:
-        read_labels  += [f"Label(-1){{label_read_function_{export_name}}}"]
+        read_labels  += [f"Dedge{{label_read_function_{export_name}}}.Label(-1)"]
         import_function_itself = f"label_read_function_{export_name}"
 
     for i, l in enumerate(labels):
-        read_labels += [f"Label({i}){{label_write_{l}}}"]
-        import_labels_adr += [f"Label({i}){{label_import_{l}}}"]
+        read_labels += [f"Dedge{{label_write_{l}}}.Label({i})"]
+        import_labels_adr += [f"Dedge{{label_import_{l}}}.Label({i})"]
         closed_links += [ f"label_import_{l}"]
 
     for a in addresses:
-        import_labels_adr += [f"Adr({a}){{label_import_{a}}}"]
+        import_labels_adr += [f"Dedge{{label_import_{a}}}.Adr({a})"]
         closed_links += [f"label_import_{a}"]
 
 
@@ -109,7 +109,7 @@ Node.(
     Extra.DataTypes.({transform_type(func_type)}
     ) |
     Export.({join_or_1(" | ", export)}) |
-    Write.Label(0){{label_write_{export_name}}}
+    Write.Dedge{{label_write_{export_name}}}.Label(0)
 )
 """, f"label_write_{export_name}", import_function_itself
 
@@ -243,12 +243,12 @@ Block.(
         BlockEntry{{{entrance_register}}} 
         {exit_register}
     ) |
-    Import.({join_or_1(" | ", import_address + import_labels + [f"State{{state_0}}"])}) |
+    Import.({join_or_1(" | ", import_address + import_labels + [f"Dedge{{state_0}}.State"])}) |
     Body.Region(0).(
         {join_or_1(''' |
         ''', block_body)}
     ) |
-    Export.({join_or_1(" | ", export_address + export_labels + [f"State{{state_{state}}}"])})
+    Export.({join_or_1(" | ", export_address + export_labels + [f"Dedge{{state_{state}}}.State"])})
 
 )
 """, labels, function_addresses, entrance_register
@@ -259,10 +259,10 @@ def create_address2(address):
     return create_address("%" + address,int(address))[0]
 
 def create_label2(label):
-    return f"Label({label[1]}){{label_{label[0]}}}"
+    return f"Dedge{{label_{label[0]}}}.Label({label[1]})"
 
 def create_label3(label):
-    return f"Label({label[0]}){{{label[1]}}}"
+    return f"Dedge{{{label[1]}}}.Label({label[0]})"
 
 def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int):
     instruction_2_split = str(instruction).split(name)
@@ -272,7 +272,7 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
 
     instruction_info = {}
     instruction_info["opcode"] = "Call"
-    instruction_info["write"] = [f"State{{state_{state+1}}}"]
+    instruction_info["write"] = [f"Dedge{{state_{state+1}}}.State"]
     if call_info[0][0] == "%":
         adr, closure = create_address(call_info[0])
         closures += [closure]
@@ -280,7 +280,7 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
         
     
     instruction_info["type"] = []
-    instruction_info["read"] = [ f"State{{state_{state}}}" ]
+    instruction_info["read"] = [ f"Dedge{{state_{state}}}.State" ]
     j = 0
     gep = False
     gep_expr = ""
@@ -357,20 +357,20 @@ f"""
 /label_export_{export_name} /label_import_{import_name}
 Node.(
     NodeType.Delta |
-    Read.Label(0){{label_write_{import_name}}} |
-    Import.Label(0){{label_import_{import_name}}} |
+    Read.Dedge{{label_write_{import_name}}}.Label(0) |
+    Import.Dedge{{label_import_{import_name}}}.Label(0) |
     Body.Region(0).Node.(
             NodeType.Simple |
             Body.Literal |
-            Read.( Const(0,{type_no}) | Label(0){{label_import_{import_name}}} ) |
-            Write.(Label(0){{label_export_{export_name}}}) |
+            Read.( Const(0,{type_no}) | Dedge{{label_import_{import_name}}}.Label(0) ) |
+            Write.(Dedge{{label_export_{export_name}}}.Label(0)) |
             Extra.DataTypes.({transform_type(var_type)}) ) |
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
     ) |
-    Export.Label(0){{label_export_{export_name}}} |
-    Write.Label(0){{label_write_{export_name}}}
+    Export.Dedge{{label_export_{export_name}}}.Label(0) |
+    Write.Dedge{{label_write_{export_name}}}.Label(0)
 )
 """,  f"label_write_{export_name}"    
 
@@ -386,15 +386,15 @@ Node.(
             NodeType.Simple |
             Body.Literal |
             Read.Const(0,{type_no}) |
-            Write.(Label(0){{label_export_{export_name}}}) |
+            Write.(Dedge{{label_export_{export_name}}}.Label(0)) |
             Extra.DataTypes.({transform_type(var_type)}) 
             ) |
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
     ) |
-    Export.Label(0){{label_export_{export_name}}} |
-    Write.Label(0){{label_write_{export_name}}}
+    Export.Dedge{{label_export_{export_name}}}.Label(0) |
+    Write.Dedge{{label_write_{export_name}}}.Label(0)
 )
 """, f"label_write_{export_name}"
     
@@ -639,7 +639,7 @@ def create_address(number_string, order=-1):
         if number_string[-1] == ",":
             number_string = number_string[:-1]
         label = "label_" + number_string[1:].replace("_", "__").replace(".", "_")
-        return f"Label({order}){{{label}}}", " /" + label   
+        return f"Dedge{{{label}}}.Label({order})", " /" + label   
     
     if number_string[0] == "%":
         for i in number_string:
@@ -663,7 +663,7 @@ def create_address(number_string, order=-1):
                 return_string += "eight"
             elif i == "9":
                 return_string += "nine"
-        return f"Adr({order}){{{return_string}}}", " /" + return_string
+        return f"Dedge{{{return_string}}}.Adr({order})", " /" + return_string
 
     if not str.isdigit(number_string[-1]):
         number_string = number_string[:-1]
