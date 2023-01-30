@@ -15,6 +15,7 @@ ctrl Options = 0;
 ctrl Omega = 0;
 atomic ctrl Lambda = 0;
 atomic ctrl Delta = 0;
+atomic ctrl Gamma = 0;
 
 atomic ctrl Simple = 0;
 
@@ -39,10 +40,13 @@ atomic ctrl Getelementptr = 0;
 atomic ctrl Literal = 0;
 
 ## Address Controls
-atomic fun ctrl Adr(i) = 1;
-atomic fun ctrl Label(i) = 1;
-atomic fun ctrl Const(i, j) = 0;
-atomic ctrl State = 1;
+ctrl Dedge = 1;
+## atomic fun ctrl Adr(i) = 0;
+## atomic fun ctrl Label(i) = 0;
+atomic ctrl Loc = 1;
+ctrl Loc1 = 1;
+atomic fun ctrl Const(i) = 0;
+atomic ctrl State = 0;
 
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;
@@ -69,6 +73,9 @@ atomic ctrl CtSelfLoop = 0;
 atomic ctrl CtIfThen = 0;
 atomic ctrl CtWhileLoop = 0;
 atomic ctrl CtTopNode = 0;
+
+## RVSDG helper
+atomic ctrl Shoelace = 2;
 
 
 
