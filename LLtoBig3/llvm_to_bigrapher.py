@@ -90,11 +90,18 @@ def parse_function(function: ValueRef):
 
     read_labels = []
     import_labels_adr = []
+    types = [transform_type(func_type, "return")]
 
+    for i, arg in enumerate(function.arguments):
+        arg = str(arg).split()
+        types += [transform_type(arg[0], i)]
+        address, closure = create_address(arg[1], i)
+        import_labels_adr += [address]
+        closed_links += [closure[2:], f"adr_{i}" ]
 
 
     for b in function.blocks:
-        block, labels, address, cfg_node_entrance = parse_block(b, labels, addresses)
+        block, labels, addresses, cfg_node_entrance = parse_block(b, labels, addresses)
         blocks += [block]
         closed_links += [cfg_node_entrance]
     
@@ -112,9 +119,9 @@ def parse_function(function: ValueRef):
 
     
     for a in addresses:
-        import_labels_adr += [f"Dedge{{label_{a}}}.Loc{{adr_{a}}}"]
+        # import_labels_adr += [f"Dedge{{label_{a}}}.Loc{{adr_{a}}}"]
 
-        closed_links += [f"label_{a}", f"adr_{a}"]
+        closed_links += [ f"adr_{a}"]
 
 
     return \
@@ -128,7 +135,7 @@ Node.(
         {join_or_1(''' |
         ''', blocks)}
     ) |
-    Extra.DataTypes.( /adr_0 {transform_type(func_type)} 
+    Extra.DataTypes.( {join_or_1(" | ", types)} 
     ) |
     Export.({join_or_1(" | ", export)}) |
     Write.Dedge{{label_write_{export_name}}}.Loc{{flabel_0}}
@@ -186,6 +193,10 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
                         export_labels.add((store_address, labels.index(store_address)))
                 else:
                     export_address.add(store_address)
+                    if store_address not in function_addresses:
+                        function_addresses.append(store_address)
+
+                
                 
             case "br":
                 match translate_instruction_br(instruction):
@@ -312,11 +323,13 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
     gep = False
     gep_expr = ""
     for i in instruction_2_split[1].split():
+        if i[0] == "#":
+            break
         if i[0] == "@":
             adr, closure = create_address(i,j-1)
             closures += [closure]
             instruction_info["read"] += [ adr ]
-            labels += [closure[2:]]
+            labels += [closure[8:]]
             instruction_info["in_instruction"] += [f"/adr_{j-1}"]
         if j%2 == 0:
             instruction_info["type"] += [transform_type(i,j)]
@@ -383,49 +396,49 @@ def parse_global_variable(global_variable:ValueRef):
         import_name = globa_variable_str.split(var_type)[-1].split("@")[1].split(",")[0].replace("_", "__").replace(".", "_")
         return \
 f"""
-/label_export_{export_name} /label_import_{import_name} /glabel_0
+/label_export_{export_name} /label_import_{import_name} /adr_0
 Node.(
     NodeType.Delta |
-    Read.Dedge{{label_write_{import_name}}}.Loc{{glabel_0}} |
-    Import.Dedge{{label_import_{import_name}}}.Loc{{glabel_0}} |
-    /l
+    Read.Dedge{{label_write_{import_name}}}.Loc{{adr_0}} |
+    Import.Dedge{{label_import_{import_name}}}.Loc{{adr_0}} |
+    /adr_0
     Body.Region(0).Node.(
             NodeType.Simple |
             Body.Literal |
-            Read.(Loc1{{l}}.Const({type_no}) | Dedge{{label_import_{import_name}}}.Loc{{l}} ) |
-            Write.(Dedge{{label_export_{export_name}}}.Loc{{l}}) |
+            Read.(Loc1{{adr_0}}.Const({type_no}) | Dedge{{label_import_{import_name}}}.Loc{{adr_0}} ) |
+            Write.(Dedge{{label_export_{export_name}}}.Loc{{adr_0}}) |
             Extra.DataTypes.({transform_type(var_type)}) ) |
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
     ) |
-    Export.Dedge{{label_export_{export_name}}}.Loc{{glabel_0}} |
-    Write.Dedge{{label_write_{export_name}}}.Loc{{glabel_0}}
+    Export.Dedge{{label_export_{export_name}}}.Loc{{adr_0}} |
+    Write.Dedge{{label_write_{export_name}}}.Loc{{adr_0}}
 )
 """,  f"label_write_{export_name}"    
 
     else:
         return \
 f"""
-/label_export_{export_name} /glabel_0
+/label_export_{export_name} /adr_0
 Node.(
     NodeType.Delta |
     Read.1 |
     Import.1 |
-    /l
+    /adr_0 /l
     Body.Region(0).Node.(
             NodeType.Simple |
             Body.Literal |
             Read.Loc1{{l}}.Const({type_no}) |
-            Write.(Dedge{{label_export_{export_name}}}.Loc{{l}}) |
+            Write.(Dedge{{label_export_{export_name}}}.Loc{{adr_0}}) |
             Extra.DataTypes.({transform_type(var_type)}) 
             ) |
     Extra.(
         DataTypes.({transform_type(var_type)}) |
         Options.({join_or_1(" | ",options)})    
     ) |
-    Export.Dedge{{label_export_{export_name}}}.Loc{{glabel_0}} |
-    Write.Dedge{{label_write_{export_name}}}.Loc{{glabel_0}}
+    Export.Dedge{{label_export_{export_name}}}.Loc{{adr_0}} |
+    Write.Dedge{{label_write_{export_name}}}.Loc{{adr_0}}
 )
 """, f"label_write_{export_name}"
     
@@ -565,7 +578,7 @@ def translate_instruction_load(instruction):
         label = True
 
     instruction_info["in_instruction"] = ["/adr_0", "/adr_1"]
-    return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label
+    return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label, 
 
 def translate_instruction_store(instruction):
     instruction = instruction.split()
@@ -648,6 +661,9 @@ def transform_type(type_string, type_order=0):
     else:
         type_no = len(strings_dict)
         strings_dict[type_string] = type_no
+
+    if type(type_order) == str:
+        return f"Loc1{{adr_{type_order}}}.DataType(-1,{type_no})"
 
     return f"Loc1{{adr_{type_order}}}.DataType({type_order},{type_no})"
 

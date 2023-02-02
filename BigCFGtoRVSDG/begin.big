@@ -1,6 +1,7 @@
 begin brs 
     init cfg;
-    rules = [   (ct_deabstractify(0), ct_deabstractify(1), ct_deabstractify(2)), 
+    rules = [   ## Create the control tree
+                (ct_deabstractify(0), ct_deabstractify(1), ct_deabstractify(2)), 
                 (ct_continuous, ct_if_then_else, 
                 ct_if_then(1,2), ct_if_then(2,1),
                 ct_selfloop(1,2), ct_selfloop(2,1),
@@ -8,9 +9,9 @@ begin brs
                 {ct_top_node}, ## Make sure one CT is completed before starting another
                 {ct_begin},
                 ## Create RVSDG from CT
-                {rg_deduplicate_read, rg_deduplicate_write,
-                rg_deduplicate_state_read, rg_deduplicate_state_write},
-                {rg_disconnect_dedge_read, rg_disconnect_dedge_write},
+                (rg_deduplicate_read, rg_deduplicate_write,
+                rg_deduplicate_state_read, rg_deduplicate_state_write),
+                (rg_disconnect_dedge_read, rg_disconnect_dedge_write),
                 {rg_if_then_else}
                   ];
 end
