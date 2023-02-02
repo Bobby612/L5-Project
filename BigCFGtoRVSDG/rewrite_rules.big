@@ -249,66 +249,6 @@ fun react ct_deabstractify(i) = /a (
 
 
 ## Transform the Control Tree to RVSDG
-
-## fun react rg_continuous_connect1_adr(i) = 
-##     CtNode.(
-##         CtContinuous |
-
-##         CtBlock(1).Block.(
-##             id |
-##             Body.Region(0).id |
-##             Export.(Adr(i){x} | id) 
-##         ) |
-##         CtBlock(2).Block.(
-##             Import.(Adr(i){y} | id) |
-##             id
-##         )
-
-##     )
-##     -->
-##     CtNode.(
-##         CtContinuous |
-
-##         CtBlock(1).Block.(
-##             id |
-##             Body.Region(0).(Shoelace{x,y} | id) |
-##             Export.id
-##         ) |
-##         CtBlock(2).Block.(
-##             Import.id |
-##             id
-##         )
-##     )
-    ## ;
-
-## react rg_if_then_else = 
-##     CtNode.(
-##         CtIfThenElse |
-
-##         CtBlock(0).Block.id |
-##         CtBlock(1).Block.(Import.id | Export.id | Body.id) |
-##         CtBlock(2).Block.(Import.id | Export.id | Body.id) 
-##     )
-##     -->
-##     CtNode.(
-##         CtIfThenElse |
-
-##         CtBlock(0).Block.id |
-##         Node.(
-##             NodeType.Gamma |
-##             Read.1 |
-##             Import.id | Import.id | ## Import
-##             Body.(
-##                 id | id
-##             ) |
-##             Export.id | Export.id  | ## Export
-##             Write.1
-##         )
-##     )
-##     @[0, 1, 4, 3, 6, 2, 5]
-##     if !CtNode in param
-##     ;
-
     react rg_if_then_else = 
     CtNode.(
         CtIfThenElse |
@@ -337,22 +277,26 @@ fun react ct_deabstractify(i) = /a (
     if !CtNode in param
     ;
 
-## Add the read and write of the new node
-## react rg_add_read = 
-##     Node.(
-##         Read.id |
-##         Import.(Dedge{x}.Loc{y} | id) |
-##         id
-##     )
-##     --> /z
-##     Node.(
-##         Read.(Dedge{z}.Loc{y} | id) |
-##         Import.(Dedge{x}.Loc{y} | id) |
-##         id 
-##     )
-##     if !{y} in param
-##     ;
+react rg_finish_node = 
+    CtNode.(
+        id |
+        CtBlock(0).Block.(
+            Body.Region(0).id |
+            id
+        ) |
+        Node.id
+    ) 
+    -->
+    Block.(
+        Body.Region(0).(
+            id | Node.id
+        )
+        | id
+    )
+    @[1, 2, 3];
 
+
+## Add the read and write of the new node
 react rg_deduplicate_read = 
     Node.(
         Read.(Dedge{x}.Loc{y} | Dedge{z}.Loc{y} | id) |
@@ -381,14 +325,14 @@ react rg_deduplicate_write =
 
 react rg_disconnect_dedge_read = ## Includes State
     Node.(
-        Read.(Dedge{x}.Loc{y} | id) |
-        Import.(Dedge{x}.Loc{y} | id) |
+        Read.(Dedge{x}.id | id) |
+        Import.(Dedge{x}.id | id) |
         id
     )
     --> /z
     Node.(
-        Read.(Dedge{z}.Loc{y} | id) |
-        Import.(Dedge{x}.Loc{y} | id) |
+        Read.(Dedge{z}.id | id) |
+        Import.(Dedge{x}.id | id) |
         id
     )
     ;
@@ -420,6 +364,212 @@ react rg_deduplicate_state_write = /x /y
     ;
     
     
+## Incorporate the new node into its parent node
+## # Connect the Read and Write of the new node
+
+react rg_connect_node_read_to_export = /z (
+    CtBlock(0).Block.(
+        Export.(
+            Dedge{x}.Loc{y} | id
+        ) |
+        id
+    ) | 
+    Node.(
+        Read.(
+            Dedge{z}.Loc{y} | 
+            id
+        ) |
+        id
+    )
+)
+    --> (
+    CtBlock(0).Block.(
+        Export.(
+            Dedge{x}.Loc{y} |id
+        ) |
+        id
+    ) | 
+    Node.(
+        Read.(
+            Dedge{x}.Loc{y} | 
+            id
+        ) |
+        id
+    )
+)
+    ;
+
+react rg_connect_write_to_export = /z (
+    CtBlock(0).Block.(
+        Export.(
+            Dedge{x}.Loc{y} | id
+        ) |
+        id
+    ) | 
+    Node.(
+        Write.(
+            Dedge{z}.Loc{y} | 
+            id
+        ) |
+        id
+    )
+)
+    -->  /z (
+    CtBlock(0).Block.(
+        Export.(
+            Dedge{z}.Loc{y} | id
+        ) |
+        id
+    ) |
+    Node.(
+        Write.(
+            Dedge{z}.Loc{y} | id
+        ) | 
+        id
+    ) | {x}
+)
+    ;
+
+
+react rg_connect_read_to_import = /z (
+    CtBlock(0).Block.(
+        Import.(
+            Dedge{x}.Loc{y} | id
+        ) | 
+        id
+    ) |
+    Node.(
+        Read.(
+            Dedge{z}.Loc{y} | id
+        ) | 
+        id
+    )
+)
+    -->
+    CtBlock(0).Block.(
+        Import.(
+            Dedge{x}.Loc{y} | id
+        ) | 
+        id
+    ) |
+    Node.(
+        Read.(
+            Dedge{x}.Loc{y} | id
+        ) |
+        id
+    )
+    ;
+
+react rg_add_write_to_export = /z (
+    CtBlock(0).Block.(
+        Export.id |
+        id
+    ) |
+    Node.(
+        Write.(
+            Dedge{z}.Loc{y} | id
+        ) | 
+        id
+    )
+)
+    --> /z (
+    CtBlock(0).Block.(
+        Export.(
+            Dedge{z}.Loc{y} | id
+        ) | 
+        id
+    ) | 
+    Node.(
+        Write.(
+            Dedge{z}.Loc{y} | id
+        ) |
+        id
+    )
+)
+    if !{y} in param;
+
+react rg_connect_state = /z /w (
+    CtBlock(0).Block.(
+        Import.(
+            Dedge{x}.State | id
+        ) | 
+        Export.(
+            Dedge{y}.State | id
+        ) | 
+        id
+    ) |
+    Node.(
+        Read.(
+            Dedge{z}.State | id
+        ) | 
+        Write.(
+            Dedge{w}.State | id
+        ) |
+        id
+    )
+)
+    --> /v (
+    CtBlock(0).Block.(
+        Import.(
+            Dedge{x}.State | id
+        ) | 
+        Export.(
+            Dedge{v}.State | id
+        ) | 
+        id
+    ) |
+    Node.(
+        Read.(
+            Dedge{y}.State | id
+        ) | 
+        Write.(
+            Dedge{v}.State | id
+        ) |
+        id
+    )
+)
+    ;
+
+react rg_add_state = (
+    CtBlock(0).Block.(
+        Import.id |
+        Export.id |
+        id
+    ) |
+    Node.(
+        Read.(
+            Dedge{x}.State | id
+        ) |
+        Write.(
+            Dedge{y}.State | id 
+        ) |
+        id
+    )
+)
+    --> /z /w (
+    CtBlock(0).Block.(
+        Import.(
+            Dedge{z}.State | id 
+        ) | 
+        Export.(
+            Dedge{w}.State | id 
+        ) |
+        id 
+    ) |
+    Node.(
+        Read.(
+            Dedge{z}.State | id
+        ) |
+        Write.(
+            Dedge{w}.State | id 
+        ) |
+        id | {x} | {y}
+    )
+)
+    if !State in param;
+    
+
+
 
 
 

@@ -74,8 +74,6 @@ atomic ctrl CtIfThen = 0;
 atomic ctrl CtWhileLoop = 0;
 atomic ctrl CtTopNode = 0;
 
-## RVSDG helper
-atomic ctrl Shoelace = 2;
 
 
 
