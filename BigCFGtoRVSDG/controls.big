@@ -47,6 +47,7 @@ atomic ctrl Loc = 1;
 ctrl Loc1 = 1;
 atomic fun ctrl Const(i) = 0;
 atomic ctrl State = 0;
+atomic ctrl Branch = 0;
 
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;
