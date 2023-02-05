@@ -146,6 +146,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
     entrance_register = ""
     exit_register = ""
     state = 0
+    ret_label = False
 
     # function_addresses = []
 
@@ -243,6 +244,8 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
                 instruction_node, closure = translate_instruction_ret(str(instruction))
                 closures.update(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
+                ret_label = True
+
             case "bitcast":
                 instruction_node, closure = translate_instruction_bitcast(str(instruction))
                 closures.update(closure)
@@ -269,6 +272,11 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
     export_labels = list(export_labels)
     export_labels = list(map(create_label2, export_labels))
 
+    if ret_label:
+        ret_label = ["Dedge{return_address}.Loc{adr_return}"]
+    else:
+        ret_label = []
+
     return\
 f"""
 {" ".join(list(closures))} /state_{state}
@@ -282,7 +290,7 @@ Block.(
         {join_or_1(''' |
         ''', block_body)}
     ) |
-    Export.({join_or_1(" | ", export_address + export_labels + [f"Dedge{{state_{state}}}.State"])})
+    Export.({join_or_1(" | ", export_address + export_labels + ret_label + [f"Dedge{{state_{state}}}.State"])})
 
 )
 """, labels, function_addresses, entrance_register
