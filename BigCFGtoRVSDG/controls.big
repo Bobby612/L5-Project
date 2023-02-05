@@ -16,6 +16,7 @@ ctrl Omega = 0;
 atomic ctrl Lambda = 0;
 atomic ctrl Delta = 0;
 atomic ctrl Gamma = 0;
+atomic ctrl Theta = 0;
 
 atomic ctrl Simple = 0;
 

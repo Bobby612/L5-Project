@@ -199,17 +199,24 @@ fun react ct_while_loop(i, j) =  /y (
     ) |
     Ct.(
         CtNode.(
-            CtWhileLoop |
+            CtIfThen |
             
             CtBlock(0).Block.id |
-            CtBlock(1).Block.id |
+            CtBlock(1).CtNode.(
+                CtSelfLoop |
+                CtBlock(0).CtNode.(
+                    CtContinuous |
+                    CtBlock(1).id |
+                    CtBlock(2).id 
+                )
+            ) |
 
             CtAbstract{a}
         ) |
         id
     )
 )
-    ;
+    @[0, 1, 0, 2];
 
 react ct_top_node = /x (
     Block.(
@@ -300,8 +307,33 @@ react rg_continuous_finish_block =
     )
     @[0, 3, 1, 4, 2, 5];
 
+react rg_if_then = 
+    CtNode.(
+        CtIfThen |
 
-    react rg_if_then_else = 
+        CtBlock(0).Block.id |
+        CtBlock(1).Block.(Import.id | Export.id | Body.id)
+    )
+    -->
+    CtNode.(
+        CtIfThen |
+
+        CtBlock(0).Block.id |
+        Node.(
+            NodeType.Gamma |
+            Read.id |
+            Import.id | ## Import
+            Body.id |
+            Export.id  | ## Export
+            Write.id
+        )
+    )
+    @[0, 1, 1, 3, 2, 2]
+    if !CtNode in param
+    ;
+
+
+react rg_if_then_else = 
     CtNode.(
         CtIfThenElse |
 
@@ -329,9 +361,9 @@ react rg_continuous_finish_block =
     if !CtNode in param
     ;
 
-react rg_if_then_else_connect_conditional = 
+react rg_gamma_connect_conditional = 
     CtNode.(
-        CtIfThenElse |
+        id |
         CtBlock(0).Block.(
             Body.Region(0).(
                 Node.(
@@ -344,13 +376,14 @@ react rg_if_then_else_connect_conditional =
             id
         ) |
         Node.(
+            NodeType.Gamma |
             Read.id |
             id
         )
     ) 
     --> /x (
     CtNode.(
-        CtIfThenElse |
+        id |
         CtBlock(0).Block.(
             Body.Region(0).(
                 Node.(
@@ -363,6 +396,7 @@ react rg_if_then_else_connect_conditional =
             id
         ) |
         Node.(
+            NodeType.Gamma |
             Read.(
                 Dedge{x}.Branch |
                 id
@@ -371,7 +405,63 @@ react rg_if_then_else_connect_conditional =
         )
     )
 )
-    if !Branch in param;
+    ;
+
+react rg_self_loop = 
+    CtNode.(
+        CtSelfLoop |
+        CtBlock(0).Block.(Import.id | Export.id | Body.Region(0).id)
+    )
+    -->
+    CtNode.(
+        CtSelfLoop |
+
+        CtBlock(0).Block.(Import.1 | Export.1 | Body.Region(0).1) |
+        Node.(
+            NodeType.Theta |
+            Read.id |
+            Import.id | ## Import
+            Body.Region(0).id |
+            Export.id  | ## Export
+            Write.id
+        )
+    )
+    @[0, 0, 2, 1, 1];
+
+react rg_self_loop_connect_conditional = 
+    Node.(
+        NodeType.Theta |
+        Read.id |
+        Import.id | ## Import
+        Body.Region(0).(
+            Node.(
+                Body.Br |
+                Write.1 |
+                id
+            ) |
+            id
+        ) |
+        Export.id  | ## Export
+        Write.id
+    )
+    --> /x (
+    Node.(
+        NodeType.Theta |
+        Read.id |
+        Import.id | ## Import
+        Body.Region(0).(
+            Node.(
+                Body.Br |
+                Write.Dedge{x}.Branch |
+                id
+            ) |
+            id
+        ) |
+        Export.(Dedge{x}.Branch | id)  | ## Export
+        Write.id
+    )
+)
+    ;
 
 
 react rg_finish_node = 
@@ -391,6 +481,58 @@ react rg_finish_node =
         | id
     )
     @[1, 3, 2];
+
+react rg_lone_region_void = 
+    Node.(
+        NodeType.Lambda |
+        Import.id |
+        Body.Region(0).Ct.(
+            CtTopNode |
+            CtBlock(0).Block.(
+                Import.id |
+                Body.Region(0).id |
+                Export.id
+            )
+        ) |
+        Export.1 |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Lambda |
+        Import.(id | id) |
+        Body.Region(0).id |
+        Export.1 |
+        id
+    )
+    @[0, 1, 2, 4]
+    ;
+
+react rg_lone_region_return = 
+    Node.(
+        NodeType.Lambda |
+        Import.id |
+        Body.Region(0).Ct.(
+            CtTopNode |
+            CtBlock(0).Block.(
+                Import.id |
+                Body.Region(0).id |
+                Export.(Dedge{x}.Loc{y} | id)
+            )
+        ) |
+        Export.(/z Dedge{z}.Loc{y}) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Lambda |
+        Import.(id | id) |
+        Body.Region(0).id |
+        Export.Dedge{x}.Loc{y} |
+        id
+    )
+    @[0, 1, 2, 4]
+    ;
 
 ## Connect the Imports and Exports of the new Continuous Block
 react rg_continuous_connect_state = u/{y,w}
@@ -781,6 +923,34 @@ react rg_add_write_to_export = /z (
     ) | 
     Node.(
         Write.(
+            Dedge{z}.Loc{y} | id
+        ) |
+        id
+    )
+)
+    if !{y} in param;
+
+react rg_add_read_to_import = /z (
+    CtBlock(0).Block.(
+        Import.id |
+        id
+    ) |
+    Node.(
+        Read.(
+            Dedge{z}.Loc{y} | id
+        ) | 
+        id
+    )
+)
+    --> /z (
+    CtBlock(0).Block.(
+        Import.(
+            Dedge{z}.Loc{y} | id
+        ) | 
+        id
+    ) | 
+    Node.(
+        Read.(
             Dedge{z}.Loc{y} | id
         ) |
         id
