@@ -277,20 +277,30 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
     else:
         ret_label = []
 
+    if state != 0:
+        state_closure = f" /state_{state}"
+        state_import = [f"Dedge{{state_0}}.State"]
+        state_export = [f"Dedge{{state_{state}}}.State"]
+    else:
+        state_closure = ""
+        state_import = []
+        state_export = []
+
+
     return\
 f"""
-{" ".join(list(closures))} /state_{state}
+{" ".join(list(closures))} {state_closure}
 Block.(
     Interface.(
         BlockEntry{{{entrance_register}}} 
         {exit_register}
     ) |
-    Import.({join_or_1(" | ", import_address + import_labels + [f"Dedge{{state_0}}.State"])}) |
+    Import.({join_or_1(" | ", import_address + import_labels + state_import)}) |
     Body.Region(0).(
         {join_or_1(''' |
         ''', block_body)}
     ) |
-    Export.({join_or_1(" | ", export_address + export_labels + ret_label + [f"Dedge{{state_{state}}}.State"])})
+    Export.({join_or_1(" | ", export_address + export_labels + ret_label + state_export)})
 
 )
 """, labels, function_addresses, entrance_register
