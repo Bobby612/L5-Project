@@ -1,0 +1,252 @@
+react ct_begin = 
+    Node.(
+        NodeType.Lambda |
+        Body.Region(0).( ## Function is non-empty and has CFG in it
+            Block.id | id
+        ) |
+        id
+    )   
+    -->
+    Node.(
+        NodeType.Lambda |
+        Body.Region(0).( 
+            Block.id | id | Ct.1
+        ) |
+        id
+    )
+    if !Ct in param
+    ;
+
+react ct_continuous = /y (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit{y} 
+        ) |
+        id
+    ) |
+    Block.(
+        Interface.(
+            BlockEntry{y} |
+            id
+        ) |
+        id
+    ) |
+    Ct.id 
+)
+    --> /a (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            id
+        ) |
+        CtAbstract{a}
+    ) |
+    Ct.(
+        CtNode.(
+            CtContinuous |
+
+            CtBlock(1).Block.id |
+            CtBlock(2).Block.id |
+
+            CtAbstract{a}
+        ) |
+        id
+    ) 
+)
+    @[1, 0, 2, 3];
+
+react ct_if_then_else = /y /z (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit_ord(1){y} | BlockExit_ord(2){z}
+        ) |
+        id
+    ) |
+    Block.(
+        Interface.(
+            BlockEntry{y} |
+            BlockExit{w} 
+        ) |
+        id
+    ) |
+    Block.(
+        Interface.(
+            BlockEntry{z} |
+            BlockExit{w} 
+        ) |
+        id
+    ) |
+    Ct.id 
+)
+    --> /a (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit{w} 
+        ) |
+        CtAbstract{a}
+    ) |
+    Ct.(
+        CtNode.(
+            CtIfThenElse |
+
+            CtBlock(0).Block.id |
+            CtBlock(1).Block.id |
+            CtBlock(2).Block.id |
+            
+            CtAbstract{a}
+        ) |
+        id
+    ) 
+)
+    ;
+
+fun react ct_if_then(i, j) = /y (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit_ord(i){y} | BlockExit_ord(j){z}
+        ) |
+        id
+    ) |
+    Block.(
+        Interface.(
+            BlockEntry{y} |
+            BlockExit{z}
+        ) |
+        id
+    ) |
+    Ct.id
+)
+    --> /a (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit{z}
+        ) |
+        CtAbstract{a}
+    ) |
+    Ct.(
+        CtNode.(
+            CtIfThen |
+            CtBlock(0).Block.id |
+            CtBlock(1).Block.id |
+            CtAbstract{a}
+        ) |
+        id
+    )
+)
+    ;
+
+fun react ct_selfloop(i, j) = ## The self-loop can be either the first or the second exit
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit_ord(i){x} | BlockExit_ord(j){y}
+        ) |
+        id
+    ) |
+    Ct.id
+    --> /a (
+    Block.(
+        Interface.(
+            BlockEntry{x} | BlockExit{y}
+        ) |
+        CtAbstract{a}
+    ) |
+    Ct.(
+        CtNode.(
+            CtSelfLoop |
+
+            CtBlock(0).Block.id |
+            
+            CtAbstract{a}
+        ) |
+        id
+    ) 
+)
+    ;
+
+fun react ct_while_loop(i, j) =  /y (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit_ord(i){y} | BlockExit_ord(j){z}
+        ) | 
+        id
+    ) |
+    Block.(
+        Interface.(
+            BlockEntry{y} |
+            BlockExit{x}
+        ) |
+        id
+    ) |
+    Ct.id
+)
+    --> /a (
+    Block.(
+        Interface.(
+            BlockEntry{x} |
+            BlockExit{z}
+        ) |
+        CtAbstract{a}
+    ) |
+    Ct.(
+        CtNode.(
+            CtIfThen |
+            
+            CtBlock(0).Block.id |
+            CtBlock(1).CtNode.(
+                CtSelfLoop |
+                CtBlock(0).CtNode.(
+                    CtContinuous |
+                    CtBlock(1).id |
+                    CtBlock(2).id 
+                )
+            ) |
+
+            CtAbstract{a}
+        ) |
+        id
+    )
+)
+    @[0, 1, 0, 2];
+
+react ct_top_node = /x (
+    Block.(
+        Interface.BlockEntry{x} | 
+        id
+    ) | 
+    Ct.id
+)
+    -->
+    1 |
+    Ct.(
+        CtNode.(
+            CtTopNode |
+            CtBlock(0).Block.id
+        ) | 
+        id
+    )
+    ;
+
+fun react ct_deabstractify(i) = /a (
+    CtNode.(
+        CtBlock(i).Block.CtAbstract{a} |
+        id
+    ) ||
+    CtNode.(
+        id |
+        CtAbstract{a}
+    )
+)
+    -->
+    CtNode.(
+        id |
+        CtBlock(i).CtNode.id
+    ) ||
+    1
+    ;

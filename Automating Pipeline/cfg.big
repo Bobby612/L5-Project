@@ -1,0 +1,1495 @@
+
+/label_read_function_malloc /label_read_function_puts /label_write_global__var1 /label_write__str /label_write_global__var3 /label_write_global__var2 /label_write__str_1 /label_write_main /label_write_malloc /label_write_example /label_write_puts  /olabel_0  /olabel_1 /glabel_0
+Omega.(
+    Import.(
+        Dedge{label_read_function_malloc}.Loc{olabel_0} | Dedge{label_read_function_puts}.Loc{olabel_1}
+    ) |
+    Body.Region(0).(
+        
+/return_address /adr_return /cfg_0 /label_global__var1 /flabel_0 /label_global__var2 /flabel_1 /label_global__var3 /flabel_2 /label_malloc /flabel_3 /label_example /flabel_4 /label_puts /flabel_5 /label__str_1 /flabel_6 /adr_1 /adr_2 /adr_3 /adr_16 /flabel_0
+Node.(
+    NodeType.Lambda |
+    Read.(Dedge{label_write_global__var1}.Loc{flabel_0} | Dedge{label_write_global__var2}.Loc{flabel_1} | Dedge{label_write_global__var3}.Loc{flabel_2} | Dedge{label_write_malloc}.Loc{flabel_3} | Dedge{label_write_example}.Loc{flabel_4} | Dedge{label_write_puts}.Loc{flabel_5} | Dedge{label_write__str_1}.Loc{flabel_6}) |
+    Import.(Dedge{label_global__var1}.Loc{flabel_0} | Dedge{label_global__var2}.Loc{flabel_1} | Dedge{label_global__var3}.Loc{flabel_2} | Dedge{label_malloc}.Loc{flabel_3} | Dedge{label_example}.Loc{flabel_4} | Dedge{label_puts}.Loc{flabel_5} | Dedge{label__str_1}.Loc{flabel_6}) |
+    Body.Region(0).(
+        
+  /six  /four  /onethree  /state_1  /onesix /label_malloc  /nine  /label_malloc  /eight  /state_0  /five  /label_puts  /label_example /label_puts /label_example  /label_global__var3  /onetwo  /oneseven  /label_global__var1  /label_global__var2  /onezero  /onefive  /label__str_1  /three  /one  /oneone  /two  /state_2  /seven  /onenine  /return_address  /onefour  /oneeight  /state_3
+Block.(
+    Interface.(
+        BlockEntry{cfg_0} 
+        
+    ) |
+    Import.(Dedge{three}.Loc{adr_3} | Dedge{label_global__var2}.Loc{flabel_1} | Dedge{label_malloc}.Loc{flabel_3} | Dedge{label_example}.Loc{flabel_4} | Dedge{label_global__var1}.Loc{flabel_0} | Dedge{label__str_1}.Loc{flabel_6} | Dedge{label_global__var3}.Loc{flabel_2} | Dedge{label_puts}.Loc{flabel_5} | Dedge{state_0}.State) |
+    Body.Region(0).(
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{one}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{two}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,17)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{three}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Loc1{adr_1}.Const(0)) |
+    Write.(Dedge{one}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{label_global__var1}.Loc{adr_1}) |
+    Write.(Dedge{four}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Add |
+    Read.(Dedge{four}.Loc{adr_1} | Loc1{adr_2}.Const(1)) |
+    Write.(Dedge{five}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{label_global__var1}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{label_global__var1}.Loc{adr_1}) |
+    Write.(Dedge{six}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Add |
+    Read.(Dedge{six}.Loc{adr_1} | Loc1{adr_2}.Const(1)) |
+    Write.(Dedge{seven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{seven}.Loc{adr_1}) |
+    Write.(Dedge{label_global__var2}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{label_global__var3}.Loc{adr_1}) |
+    Write.(Dedge{eight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,13) | Loc1{adr_1}.DataType(1,20)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Getelementptr |
+    Read.(Dedge{eight}.Loc{adr_1} | Loc1{adr_2}.Const(1)) |
+    Write.(Dedge{nine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,13) | Loc1{adr_1}.DataType(1,13) | Loc1{adr_2}.DataType(2,21)) |
+        Options.(Option(22))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{nine}.Loc{adr_1}) |
+    Write.(Dedge{onezero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,17) | Loc1{adr_1}.DataType(1,13)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{onezero}.Loc{adr_1}) |
+    Write.(Dedge{two}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,17) | Loc1{adr_0}.DataType(0,13)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Call |
+    Read.(Dedge{state_0}.State | Dedge{label_malloc}.Loc{adr_1} | Loc1{adr_2}.Const(4)) |
+    Write.(Dedge{state_1}.State | Dedge{oneone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_2}.DataType(2,23) | Loc1{adr_0}.DataType(0,13)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Bitcast |
+    Read.(Dedge{oneone}.Loc{adr_1}) |
+    Write.(Dedge{onetwo}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,13) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{onetwo}.Loc{adr_1}) |
+    Write.(Dedge{three}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,18) | Loc1{adr_0}.DataType(0,24)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{label_global__var1}.Loc{adr_1}) |
+    Write.(Dedge{onethree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{label_global__var2}.Loc{adr_1}) |
+    Write.(Dedge{onefour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2 /adr_4 /adr_6 /adr_8
+Node.(
+    NodeType.Simple |
+    Body.Call |
+    Read.(Dedge{state_1}.State | Dedge{label_example}.Loc{adr_1} | Loc1{adr_2}.Const(1) | Loc1{adr_4}.Const(2) | Dedge{onethree}.Loc{adr_6} | Dedge{onefour}.Loc{adr_8}) |
+    Write.(Dedge{state_2}.State | Dedge{onefive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_2}.DataType(2,25) | Loc1{adr_4}.DataType(4,4) | Loc1{adr_6}.DataType(6,4) | Loc1{adr_8}.DataType(8,4) | Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{three}.Loc{adr_1}) |
+    Write.(Dedge{onesix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,18) | Loc1{adr_1}.DataType(1,24)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{onefive}.Loc{adr_1}) |
+    Write.(Dedge{onesix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Call |
+    Read.(Dedge{state_2}.State | Dedge{label_puts}.Loc{adr_1} | Dedge{label__str_1}.Loc{adr_2} | Loc1{adr_2}.Const(27)) |
+    Write.(Dedge{state_3}.State | Dedge{oneseven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_2}.DataType(2,26) | Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{three}.Loc{adr_1}) |
+    Write.(Dedge{oneeight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,18) | Loc1{adr_1}.DataType(1,24)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{oneeight}.Loc{adr_1}) |
+    Write.(Dedge{onenine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_1 /adr_0
+Node.(
+    NodeType.Simple |
+    Body.Ret |
+    Read.(Dedge{onenine}.Loc{adr_1}) |
+    Write.(Dedge{return_address}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4)) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{one}.Loc{adr_1} | Dedge{two}.Loc{adr_2} | Dedge{three}.Loc{adr_3} | Dedge{onesix}.Loc{adr_16} | Dedge{label_global__var1}.Loc{flabel_0} | Dedge{label_global__var2}.Loc{flabel_1} | Dedge{return_address}.Loc{adr_return} | Dedge{state_3}.State)
+
+)
+
+    ) |
+    Extra.DataTypes.( Loc1{adr_return}.DataType(-1,16) 
+    ) |
+    Export.(Dedge{return_address}.Loc{adr_return}) |
+    Write.Dedge{label_write_main}.Loc{flabel_0}
+)
+ | 
+/return_address /adr_return /zero /adr_0 /flabel__1 /flabel_0
+Node.(
+    NodeType.Lambda |
+    Read.(Dedge{label_read_function_malloc}.Loc{flabel__1}) |
+    Import.(Dedge{zero}.Loc{adr_0}) |
+    Body.Region(0).(
+        1
+    ) |
+    Extra.DataTypes.( Loc1{adr_return}.DataType(-1,28) | Loc1{adr_0}.DataType(0,21) 
+    ) |
+    Export.(Dedge{return_address}.Loc{adr_return}) |
+    Write.Dedge{label_write_malloc}.Loc{flabel_0}
+)
+ | 
+/return_address /adr_return /zero /adr_0 /one /adr_1 /two /adr_2 /three /adr_3 /cfg_4 /cfg_17 /cfg_37 /cfg_44 /cfg_48 /cfg_52 /cfg_56 /adr_5 /adr_6 /adr_7 /adr_8 /adr_9 /adr_10 /adr_11 /adr_12 /adr_13 /adr_14 /adr_15 /adr_16 /flabel_0
+Node.(
+    NodeType.Lambda |
+    Read.(1) |
+    Import.(Dedge{zero}.Loc{adr_0} | Dedge{one}.Loc{adr_1} | Dedge{two}.Loc{adr_2} | Dedge{three}.Loc{adr_3}) |
+    Body.Region(0).(
+        
+ /eight  /six  /onezero  /onethree  /onefive  /five  /seven  /onesix  /three  /onetwo  /nine  /onefour  /one  /oneone  /zero  /two 
+Block.(
+    Interface.(
+        BlockEntry{cfg_4} 
+         | BlockExit{cfg_17}
+    ) |
+    Import.(1) |
+    Body.Region(0).(
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{five}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{six}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{seven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{eight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{nine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{onezero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{oneone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{onetwo}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{onethree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{onefour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{onefive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Alloca |
+    Read.(1) |
+    Write.(Dedge{onesix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{zero}.Loc{adr_1}) |
+    Write.(Dedge{five}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{one}.Loc{adr_1}) |
+    Write.(Dedge{six}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{two}.Loc{adr_1}) |
+    Write.(Dedge{seven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{three}.Loc{adr_1}) |
+    Write.(Dedge{eight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{five}.Loc{adr_5} | Dedge{eight}.Loc{adr_8} | Dedge{seven}.Loc{adr_7} | Dedge{six}.Loc{adr_6})
+
+)
+ |
+        
+ /threethree  /six  /twoeight  /onethree  /onesix  /twozero  /threefour  /twotwo  /eight  /five  /twofive  /threefive  /onetwo  /twosix  /twofour  /onezero  /threezero  /threeone  /threesix  /threetwo  /oneone  /twonine  /twothree  /onenine  /seven  /twoseven  /oneeight  /twoone 
+Block.(
+    Interface.(
+        BlockEntry{cfg_17} 
+         | BlockExit_ord(1){cfg_37} | BlockExit_ord(2){cfg_44}
+    ) |
+    Import.(Dedge{onezero}.Loc{adr_10} | Dedge{eight}.Loc{adr_8} | Dedge{oneone}.Loc{adr_11} | Dedge{five}.Loc{adr_5} | Dedge{seven}.Loc{adr_7} | Dedge{six}.Loc{adr_6}) |
+    Body.Region(0).(
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{six}.Loc{adr_1}) |
+    Write.(Dedge{oneeight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{oneeight}.Loc{adr_1}) |
+    Write.(Dedge{onezero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{seven}.Loc{adr_1}) |
+    Write.(Dedge{onenine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{onezero}.Loc{adr_1}) |
+    Write.(Dedge{twozero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Add |
+    Read.(Dedge{onenine}.Loc{adr_1} | Dedge{twozero}.Loc{adr_2}) |
+    Write.(Dedge{twoone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{twoone}.Loc{adr_1}) |
+    Write.(Dedge{oneone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{eight}.Loc{adr_1}) |
+    Write.(Dedge{twotwo}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{six}.Loc{adr_1}) |
+    Write.(Dedge{twothree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Sub |
+    Read.(Dedge{twotwo}.Loc{adr_1} | Dedge{twothree}.Loc{adr_2}) |
+    Write.(Dedge{twofour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{twofour}.Loc{adr_1}) |
+    Write.(Dedge{onetwo}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{twofive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{oneone}.Loc{adr_1}) |
+    Write.(Dedge{twosix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Mul |
+    Read.(Dedge{twofive}.Loc{adr_1} | Dedge{twosix}.Loc{adr_2}) |
+    Write.(Dedge{twoseven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{twoseven}.Loc{adr_1}) |
+    Write.(Dedge{five}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{twoeight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{seven}.Loc{adr_1}) |
+    Write.(Dedge{twonine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Srem |
+    Read.(Dedge{twoeight}.Loc{adr_1} | Dedge{twonine}.Loc{adr_2}) |
+    Write.(Dedge{threezero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{threezero}.Loc{adr_1}) |
+    Write.(Dedge{onethree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{threeone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{eight}.Loc{adr_1}) |
+    Write.(Dedge{threetwo}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Add |
+    Read.(Dedge{threeone}.Loc{adr_1} | Dedge{threetwo}.Loc{adr_2}) |
+    Write.(Dedge{threethree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{threethree}.Loc{adr_1}) |
+    Write.(Dedge{onesix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{threefour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{eight}.Loc{adr_1}) |
+    Write.(Dedge{threefive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Icmp |
+    Read.(Dedge{threefour}.Loc{adr_1} | Dedge{threefive}.Loc{adr_2}) |
+    Write.(Dedge{threesix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4)) |
+        Options.(Option(30))    
+    )
+)
+ |
+        
+/adr_1
+Node.(
+    NodeType.Simple |
+    Body.Br |
+    Read.(Dedge{threesix}.Loc{adr_1}) |
+    Write.(1) |
+    Extra.(
+        DataTypes.(1) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{onezero}.Loc{adr_10} | Dedge{oneone}.Loc{adr_11} | Dedge{onesix}.Loc{adr_16} | Dedge{onetwo}.Loc{adr_12} | Dedge{five}.Loc{adr_5} | Dedge{onethree}.Loc{adr_13})
+
+)
+ |
+        
+  /six  /onethree  /threenine  /five  /fourzero  /fourthree  /nine  /threeeight  /onefour  /fourone  /fourtwo 
+Block.(
+    Interface.(
+        BlockEntry{cfg_37} 
+         | BlockExit{cfg_48}
+    ) |
+    Import.(Dedge{five}.Loc{adr_5} | Dedge{onethree}.Loc{adr_13} | Dedge{six}.Loc{adr_6} | Dedge{nine}.Loc{adr_9}) |
+    Body.Region(0).(
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{threeeight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{threeeight}.Loc{adr_1}) |
+    Write.(Dedge{nine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{onethree}.Loc{adr_1}) |
+    Write.(Dedge{threenine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Add |
+    Read.(Dedge{threenine}.Loc{adr_1} | Loc1{adr_2}.Const(3)) |
+    Write.(Dedge{fourzero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{fourzero}.Loc{adr_1}) |
+    Write.(Dedge{five}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{nine}.Loc{adr_1}) |
+    Write.(Dedge{fourone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{six}.Loc{adr_1}) |
+    Write.(Dedge{fourtwo}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Shl |
+    Read.(Dedge{fourone}.Loc{adr_1} | Dedge{fourtwo}.Loc{adr_2}) |
+    Write.(Dedge{fourthree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{fourthree}.Loc{adr_1}) |
+    Write.(Dedge{onefour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{five}.Loc{adr_5} | Dedge{onefour}.Loc{adr_14} | Dedge{nine}.Loc{adr_9})
+
+)
+ |
+        
+ /onezero  /five  /foursix  /fourseven  /onefour  /fourfive 
+Block.(
+    Interface.(
+        BlockEntry{cfg_44} 
+         | BlockExit{cfg_48}
+    ) |
+    Import.(Dedge{five}.Loc{adr_5} | Dedge{onezero}.Loc{adr_10}) |
+    Body.Region(0).(
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{fourfive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{onezero}.Loc{adr_1}) |
+    Write.(Dedge{foursix}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Shl |
+    Read.(Dedge{fourfive}.Loc{adr_1} | Dedge{foursix}.Loc{adr_2}) |
+    Write.(Dedge{fourseven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{fourseven}.Loc{adr_1}) |
+    Write.(Dedge{onefour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{onefour}.Loc{adr_14})
+
+)
+ |
+        
+ /six  /onefive  /five  /fiveone  /fivezero  /fournine 
+Block.(
+    Interface.(
+        BlockEntry{cfg_48} 
+         | BlockExit{cfg_52}
+    ) |
+    Import.(Dedge{five}.Loc{adr_5} | Dedge{six}.Loc{adr_6}) |
+    Body.Region(0).(
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{fournine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{six}.Loc{adr_1}) |
+    Write.(Dedge{fivezero}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Shl |
+    Read.(Dedge{fournine}.Loc{adr_1} | Dedge{fivezero}.Loc{adr_2}) |
+    Write.(Dedge{fiveone}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Store |
+    Read.(Dedge{fiveone}.Loc{adr_1}) |
+    Write.(Dedge{onefive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4) | Loc1{adr_0}.DataType(0,18)) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{onefive}.Loc{adr_15})
+
+)
+ |
+        
+ /five  /fivefive  /onefour  /fivethree  /fivefour 
+Block.(
+    Interface.(
+        BlockEntry{cfg_52} 
+         | BlockExit_ord(1){cfg_17} | BlockExit_ord(2){cfg_56}
+    ) |
+    Import.(Dedge{five}.Loc{adr_5} | Dedge{onefour}.Loc{adr_14}) |
+    Body.Region(0).(
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{five}.Loc{adr_1}) |
+    Write.(Dedge{fivethree}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{onefour}.Loc{adr_1}) |
+    Write.(Dedge{fivefour}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Icmp |
+    Read.(Dedge{fivethree}.Loc{adr_1} | Dedge{fivefour}.Loc{adr_2}) |
+    Write.(Dedge{fivefive}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4)) |
+        Options.(Option(30))    
+    )
+)
+ |
+        
+/adr_1
+Node.(
+    NodeType.Simple |
+    Body.Br |
+    Read.(Dedge{fivefive}.Loc{adr_1}) |
+    Write.(1) |
+    Extra.(
+        DataTypes.(1) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(1)
+
+)
+ |
+        
+ /fiveeight  /onefive  /fiveseven  /return_address  /onetwo  /fivenine 
+Block.(
+    Interface.(
+        BlockEntry{cfg_56} 
+        
+    ) |
+    Import.(Dedge{onefive}.Loc{adr_15} | Dedge{onetwo}.Loc{adr_12}) |
+    Body.Region(0).(
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{onetwo}.Loc{adr_1}) |
+    Write.(Dedge{fiveseven}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1
+Node.(
+    NodeType.Simple |
+    Body.Load |
+    Read.(Dedge{onefive}.Loc{adr_1}) |
+    Write.(Dedge{fiveeight}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,18)) |
+        Options.(1)    
+    )
+)
+ |
+        
+/adr_0 /adr_1 /adr_2
+Node.(
+    NodeType.Simple |
+    Body.Add |
+    Read.(Dedge{fiveseven}.Loc{adr_1} | Dedge{fiveeight}.Loc{adr_2}) |
+    Write.(Dedge{fivenine}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4)) |
+        Options.(Option(19))    
+    )
+)
+ |
+        
+/adr_1 /adr_0
+Node.(
+    NodeType.Simple |
+    Body.Ret |
+    Read.(Dedge{fivenine}.Loc{adr_1}) |
+    Write.(Dedge{return_address}.Loc{adr_0}) |
+    Extra.(
+        DataTypes.(Loc1{adr_1}.DataType(1,4)) |
+        Options.(1)    
+    )
+)
+
+    ) |
+    Export.(Dedge{return_address}.Loc{adr_return})
+
+)
+
+    ) |
+    Extra.DataTypes.( Loc1{adr_return}.DataType(-1,29) | Loc1{adr_0}.DataType(0,4) | Loc1{adr_1}.DataType(1,4) | Loc1{adr_2}.DataType(2,4) | Loc1{adr_3}.DataType(3,4) 
+    ) |
+    Export.(Dedge{return_address}.Loc{adr_return}) |
+    Write.Dedge{label_write_example}.Loc{flabel_0}
+)
+ | 
+/return_address /adr_return /zero /adr_0 /flabel__1 /flabel_0
+Node.(
+    NodeType.Lambda |
+    Read.(Dedge{label_read_function_puts}.Loc{flabel__1}) |
+    Import.(Dedge{zero}.Loc{adr_0}) |
+    Body.Region(0).(
+        1
+    ) |
+    Extra.DataTypes.( Loc1{adr_return}.DataType(-1,31) | Loc1{adr_0}.DataType(0,13) 
+    ) |
+    Export.(Dedge{return_address}.Loc{adr_return}) |
+    Write.Dedge{label_write_puts}.Loc{flabel_0}
+)
+ |
+        
+/label_export_global__var1 /adr_0
+Node.(
+    NodeType.Delta |
+    Read.1 |
+    Import.1 |
+    /adr_0 /l
+    Body.Region(0).Node.(
+            NodeType.Simple |
+            Body.Literal |
+            Read.Loc1{l}.Const(3) |
+            Write.(Dedge{label_export_global__var1}.Loc{adr_0}) |
+            Extra.DataTypes.(Loc1{adr_0}.DataType(0,4)) 
+            ) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(Option(0) | Option(1) | Alignment(2))    
+    ) |
+    Export.Dedge{label_export_global__var1}.Loc{adr_0} |
+    Write.Dedge{label_write_global__var1}.Loc{adr_0}
+)
+ | 
+/label_export__str /adr_0
+Node.(
+    NodeType.Delta |
+    Read.1 |
+    Import.1 |
+    /adr_0 /l
+    Body.Region(0).Node.(
+            NodeType.Simple |
+            Body.Literal |
+            Read.Loc1{l}.Const(9) |
+            Write.(Dedge{label_export__str}.Loc{adr_0}) |
+            Extra.DataTypes.(Loc1{adr_0}.DataType(0,10)) 
+            ) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,10)) |
+        Options.(Option(5) | Option(6) | Option(7) | Alignment(8))    
+    ) |
+    Export.Dedge{label_export__str}.Loc{adr_0} |
+    Write.Dedge{label_write__str}.Loc{adr_0}
+)
+ | 
+/label_export_global__var3 /label_import__str /adr_0
+Node.(
+    NodeType.Delta |
+    Read.Dedge{label_write__str}.Loc{adr_0} |
+    Import.Dedge{label_import__str}.Loc{adr_0} |
+    /adr_0
+    Body.Region(0).Node.(
+            NodeType.Simple |
+            Body.Literal |
+            Read.(Loc1{adr_0}.Const(12) | Dedge{label_import__str}.Loc{adr_0} ) |
+            Write.(Dedge{label_export_global__var3}.Loc{adr_0}) |
+            Extra.DataTypes.(Loc1{adr_0}.DataType(0,13)) ) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,13)) |
+        Options.(Option(0) | Option(1) | Alignment(11))    
+    ) |
+    Export.Dedge{label_export_global__var3}.Loc{adr_0} |
+    Write.Dedge{label_write_global__var3}.Loc{adr_0}
+)
+ | 
+/label_export_global__var2 /adr_0
+Node.(
+    NodeType.Delta |
+    Read.1 |
+    Import.1 |
+    /adr_0 /l
+    Body.Region(0).Node.(
+            NodeType.Simple |
+            Body.Literal |
+            Read.Loc1{l}.Const(3) |
+            Write.(Dedge{label_export_global__var2}.Loc{adr_0}) |
+            Extra.DataTypes.(Loc1{adr_0}.DataType(0,4)) 
+            ) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,4)) |
+        Options.(Option(0) | Option(1) | Alignment(2))    
+    ) |
+    Export.Dedge{label_export_global__var2}.Loc{adr_0} |
+    Write.Dedge{label_write_global__var2}.Loc{adr_0}
+)
+ | 
+/label_export__str_1 /adr_0
+Node.(
+    NodeType.Delta |
+    Read.1 |
+    Import.1 |
+    /adr_0 /l
+    Body.Region(0).Node.(
+            NodeType.Simple |
+            Body.Literal |
+            Read.Loc1{l}.Const(14) |
+            Write.(Dedge{label_export__str_1}.Loc{adr_0}) |
+            Extra.DataTypes.(Loc1{adr_0}.DataType(0,15)) 
+            ) |
+    Extra.(
+        DataTypes.(Loc1{adr_0}.DataType(0,15)) |
+        Options.(Option(5) | Option(6) | Option(7) | Alignment(8))    
+    ) |
+    Export.Dedge{label_export__str_1}.Loc{adr_0} |
+    Write.Dedge{label_write__str_1}.Loc{adr_0}
+)
+
+    ) |
+    Extra.DataTypes.(
+        Loc1{olabel_0}.DataType(0,32) | Loc1{olabel_1}.DataType(1,33)
+    ) | 
+    Export.Dedge{label_write_main}.Loc{glabel_0}
+)
+
