@@ -27,6 +27,8 @@ begin brs
                 {rg_gamma_connect_conditional},
                 {rg_self_loop_connect_conditional},
                 {rg_finish_node},
+                (aliasing_connect),
+                (aliasing_finish),
                 {rg_continuous_connect_state},
                 {rg_continuous_connect_export_1_to_import_2_remove_export_1},
                 {rg_continuous_connect_export_1_to_import_2},

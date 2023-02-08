@@ -296,16 +296,16 @@ react rg_continuous_finish_block =
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).id
         )
     )
     -->
     Block.(
         Import.(id | id) |
         Export.(id | id) |
-        Body.Region(0).(id | id)
+        Body.Region(0).(id | id | id)
     )
-    @[0, 3, 1, 4, 2, 5];
+    @[0, 3, 1, 4, 2, 5, 6];
 
 react rg_if_then = 
     CtNode.(
@@ -486,7 +486,7 @@ react rg_lone_region_void =
     Node.(
         NodeType.Lambda |
         Import.id |
-        Body.Region(0).Ct.(
+        Body.Region(0).Ct.CtNode.(
             CtTopNode |
             CtBlock(0).Block.(
                 Import.id |
@@ -512,7 +512,7 @@ react rg_lone_region_return =
     Node.(
         NodeType.Lambda |
         Import.id |
-        Body.Region(0).Ct.(
+        Body.Region(0).Ct.CtNode.(
             CtTopNode |
             CtBlock(0).Block.(
                 Import.id |
@@ -535,7 +535,7 @@ react rg_lone_region_return =
     ;
 
 ## Connect the Imports and Exports of the new Continuous Block
-react rg_continuous_connect_state = u/{y,w}
+react rg_continuous_connect_state = 
     CtNode.(
         CtContinuous |
         CtBlock(1).Block.(
@@ -548,7 +548,11 @@ react rg_continuous_connect_state = u/{y,w}
             Export.(Dedge{z}.State | id) |
             id
         ) | 
-        Block.id
+        Block.(
+            Import.1 |
+            Export.1 |
+            Body.Region(0).id
+        )
     ) 
     -->
     CtNode.(
@@ -563,10 +567,16 @@ react rg_continuous_connect_state = u/{y,w}
             Export.(Dedge{z}.State | id) |
             id
         ) | 
-        Block.id
-    ) | {u}
+        Block.(
+            Import.1 |
+            Export.1 |
+            Body.Region(0).(id | /u Alias{y,w}.AliasNewName{u})
+        )
+    )
     ;
-react rg_continuous_connect_import_1_to_import_2 = u/{x,z} (
+
+
+react rg_continuous_connect_import_1_to_import_2 =  (
     CtNode.(
         CtContinuous |
 
@@ -582,17 +592,16 @@ react rg_continuous_connect_import_1_to_import_2 = u/{x,z} (
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).id
         )
     )
 )
     -->
-     (
     CtNode.(
         CtContinuous |
 
         CtBlock(1).Block.(
-            Import.(Dedge{u}.Loc{y} | id) |
+            Import.(Dedge{x}.Loc{y} | id) |
             id
         ) |
         CtBlock(2).Block.(
@@ -603,13 +612,13 @@ react rg_continuous_connect_import_1_to_import_2 = u/{x,z} (
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).(id | /u Alias{x,z}.AliasNewName{u})
         )
     )
-)
+
     ;
 
-react rg_continuous_connect_export_1_to_import_2 = u/{x,z} (
+react rg_continuous_connect_export_1_to_import_2 = 
     CtNode.(
         CtContinuous |
 
@@ -626,12 +635,10 @@ react rg_continuous_connect_export_1_to_import_2 = u/{x,z} (
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).id
         )
     )
-)
     -->
-     (
     CtNode.(
         CtContinuous |
 
@@ -641,20 +648,20 @@ react rg_continuous_connect_export_1_to_import_2 = u/{x,z} (
         ) |
         CtBlock(2).Block.(
             Import.id |
-            Export.(Dedge{u}.Loc{y} | id) |
+            Export.(Dedge{z}.Loc{y} | id) |
             id
         ) |
 
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).(id | /u Alias{x,z}.AliasNewName{u})
         )
     )
-)
+
     ;
 
-react rg_continuous_remove_export_1 = u/{x,z} (
+react rg_continuous_remove_export_1 =
     CtNode.(
         CtContinuous |
 
@@ -670,10 +677,9 @@ react rg_continuous_remove_export_1 = u/{x,z} (
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).id
         )
     )
-)
     -->
     CtNode.(
         CtContinuous |
@@ -683,19 +689,19 @@ react rg_continuous_remove_export_1 = u/{x,z} (
             id
         ) |
         CtBlock(2).Block.(
-            Export.(Dedge{u}.Loc{y} | id) |
+            Export.(Dedge{z}.Loc{y} | id) |
             id
         ) |
 
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).(id | /u Alias{x,z}.AliasNewName{u})
         )
     )
     ;
 
-react rg_continuous_connect_export_1_to_import_2_remove_export_1 = u/{x,z} (
+react rg_continuous_connect_export_1_to_import_2_remove_export_1 =
     CtNode.(
         CtContinuous |
 
@@ -712,10 +718,9 @@ react rg_continuous_connect_export_1_to_import_2_remove_export_1 = u/{x,z} (
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).id
         )
     )
-)
     -->
     CtNode.(
         CtContinuous |
@@ -728,14 +733,29 @@ react rg_continuous_connect_export_1_to_import_2_remove_export_1 = u/{x,z} (
             Import.id |
             Export.(Dedge{w}.Loc{y} | id) |
             id
-        ) | {u} |
+        ) |
 
         Block.(
             Import.1 |
             Export.1 |
-            Body.Region(0).1
+            Body.Region(0).(id | /u Alias{x,z}.AliasNewName{u})
         )
-    )
+    ) 
+    ;
+
+## Aliasing fixes
+react aliasing_connect = 
+    Alias{x,y}.AliasNewName{u} || 
+    Dedge{x}.id
+    -->
+    Alias{x,y}.AliasNewName{u} ||
+    Dedge{u}.id
+    ;
+
+react aliasing_finish = /x /y
+    Alias{x,y}.AliasNewName{u}
+    -->
+    1 | {u}
     ;
 
 ## Add the read and write of the new node

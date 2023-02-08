@@ -50,6 +50,10 @@ atomic fun ctrl Const(i) = 0;
 atomic ctrl State = 0;
 atomic ctrl Branch = 0;
 
+## Aliasing implementation
+ctrl Alias = 2;
+atomic ctrl AliasNewName = 1;
+
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;
 atomic fun ctrl Option(i) = 0;
