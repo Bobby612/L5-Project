@@ -1,0 +1,84 @@
+## RVSD Node Info
+ctrl Node = 0;
+ctrl NodeType = 0;
+ctrl Read = 0;
+ctrl Import = 0;
+ctrl Body = 0;
+ctrl Export = 0;
+ctrl Write = 0;
+
+ctrl Extra = 0;
+ctrl DataTypes = 0;
+ctrl Options = 0;
+
+## RVSDG Node Types
+ctrl Omega = 0;
+atomic ctrl Lambda = 0;
+atomic ctrl Delta = 0;
+atomic ctrl Gamma = 0;
+atomic ctrl Theta = 0;
+
+atomic ctrl Simple = 0;
+
+## RVSDG Node Body Types (Region and Simple Nodes)
+fun ctrl Region(i) = 0;
+
+atomic ctrl Add = 0;
+atomic ctrl Sub = 0;
+atomic ctrl Mul = 0;
+atomic ctrl Shl = 0; 
+atomic ctrl Srem = 0;
+atomic ctrl Urem = 0;
+atomic ctrl Load = 0;
+atomic ctrl Store = 0;
+atomic ctrl Br = 0;
+atomic ctrl Call = 0;
+atomic ctrl Icmp = 0;
+atomic ctrl Ret = 0;
+atomic ctrl Bitcast = 0;
+atomic ctrl Alloca = 0;
+atomic ctrl Getelementptr = 0;
+atomic ctrl Literal = 0;
+
+## Address Controls
+ctrl Dedge = 1;
+## atomic fun ctrl Adr(i) = 0;
+## atomic fun ctrl Label(i) = 0;
+atomic ctrl Loc = 1;
+ctrl Loc1 = 1;
+atomic fun ctrl Const(i) = 0;
+atomic ctrl State = 0;
+atomic ctrl Branch = 0;
+
+## Aliasing implementation
+ctrl Alias = 2;
+atomic ctrl AliasNewName = 1;
+
+## Extras
+atomic fun ctrl DataType(i,j) = 0;
+atomic fun ctrl Option(i) = 0;
+atomic fun ctrl Alignment(i) = 0;
+
+## CFG Controls
+ctrl Block = 0;
+atomic ctrl BlockEntry = 1;
+atomic ctrl BlockExit = 1;
+atomic fun ctrl BlockExit_ord(i) = 1;
+ctrl Interface = 0;
+
+## Control Tree Controls
+ctrl Ct = 0;
+atomic ctrl CtAbstract = 1;
+ctrl CtNode = 0;
+
+fun ctrl CtBlock(i) = 0;
+
+atomic ctrl CtContinuous = 0;
+atomic ctrl CtIfThenElse = 0;
+atomic ctrl CtSelfLoop = 0;
+atomic ctrl CtIfThen = 0;
+atomic ctrl CtWhileLoop = 0;
+atomic ctrl CtTopNode = 0;
+
+
+big cfg = 1; 

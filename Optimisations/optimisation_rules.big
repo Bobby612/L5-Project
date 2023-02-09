@@ -1,0 +1,72 @@
+## Optimisations expressed as graph rewriting rules
+
+## # Common Node Elimination
+
+react opt_common_node_elimination_add = 
+    Node.(
+        NodeType.Simple | 
+        Body.Add |
+        Read.(Dedge{x}.id | Dedge{y}.id) |
+        Write.Dedge{z}.id |
+        id
+    ) | 
+    Node.(
+        NodeType.Simple |
+        Body.Add |
+        Read.(Dedge{x}.id | Dedge{y}.id) |
+        Write.Dedge{w}.id |
+        id
+    ) 
+    --> /u
+    Node.(
+        NodeType.Simple |
+        Body.Add |
+        Read.(Dedge{x}.id | Dedge{y}.id) |
+        Write.Dedge{u}.id |
+        Alias{z,w}.AliasNewName{u} |
+        id
+    ) 
+    @[0, 1, 2, 3];
+
+react opt_common_node_elimination_load = 
+    Node.(
+        NodeType.Simple |
+        Body.Load |
+        Read.Dedge{x}.id |
+        Write.Dedge{z}.id |
+        id
+    ) |
+    Node.(
+        NodeType.Simple |
+        Body.Load |
+        Read.Dedge{x}.id |
+        Write.Dedge{w} |
+        id
+    )
+    --> /u
+    Node.(
+        NodeType.Simple |
+        Body.Add |
+        Read.Dedge{x}.id |
+        Write.Dedge{u}.id |
+        Alias{z,w}.AliasNewName{u} |
+        id
+    ) 
+    @[0, 1, 2];
+
+
+## ## Misc 
+## Aliasing fixes
+react aliasing_connect = 
+    Alias{x,y}.AliasNewName{u} || 
+    Dedge{x}.id
+    -->
+    Alias{x,y}.AliasNewName{u} ||
+    Dedge{u}.id
+    ;
+
+react aliasing_finish = /x /y
+    Alias{x,y}.AliasNewName{u}
+    -->
+    1 | {u}
+    ;

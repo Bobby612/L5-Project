@@ -1,0 +1,8 @@
+begin brs 
+    init cfg;
+    rules = [   
+                (aliasing_connect),
+                (aliasing_finish),
+                {opt_common_node_elimination_load, opt_common_node_elimination_add}
+                  ];
+end
