@@ -1,4 +1,0 @@
-begin brs
-    init cfg;
-    rules = [];
-end
