@@ -170,7 +170,12 @@ def parse_block(block:ValueRef, function_import_labels:list, function_addresses:
     closures = set()
 
     for instruction in block.instructions:
-        e = int(str(instruction).split()[0][1:])
+        if instruction.opcode == "store":
+            continue
+        if instruction.opcode == "br":
+            e = int(str(instruction).split()[2][1:])
+        else:
+            e = int(str(instruction).split()[0][1:])
         entrance_register = "cfg_" + str(e-1)
         break
 
