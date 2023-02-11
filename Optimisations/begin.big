@@ -3,6 +3,8 @@ begin brs
     rules = [   
                 (aliasing_connect),
                 (aliasing_finish),
-                {opt_common_node_elimination_load, opt_common_node_elimination_add}
+                {opt_common_node_elimination_load, opt_common_node_elimination_add, 
+                 opt_invariant_value_redirect_theta_2_read, opt_invariant_value_redirect_theta_1_read
+                 }
                   ];
 end

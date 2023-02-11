@@ -82,3 +82,8 @@ atomic ctrl CtTopNode = 0;
 
 
 big cfg = 1; 
+
+## Optimisation Flags
+ctrl FlagIVR = 0;
+atomic ctrl Suitable = 0;
+atomic ctrl Unsuitable = 0;

@@ -55,7 +55,162 @@ react opt_common_node_elimination_load =
     @[0, 1, 2];
 
 
-## ## Misc 
+## # Invariant Value Redirection -- Theta Node
+react opt_invariant_value_redirect_theta_2_read = /a /b
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) | 
+        Body.Region(0).(
+            Node.(
+                Read.(Dedge{x}.id | Dedge{y}.id) |
+                Write.Dedge{z}.id |
+                id
+            ) | 
+            id
+        ) |
+        id
+    )
+    --> /o (
+    Node.(
+        Read.(Dedge{m}.id | Dedge{n}.id) |
+        Write.Dedge{o}.id |
+        id
+    ) | /c /a /b
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | id ) | 
+        Body.Region(0).id |
+        id
+    )
+)
+    @[2, 3, 4, 5, 0, 1, 6, 7]
+    ## if !({a} || {b}) in param
+    ;
+
+react opt_invariant_value_redirect_theta_1_read = /a
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | id) |
+        Import.(Dedge{x}.Loc{a} | id) | 
+        Body.Region(0).(
+            Node.(
+                Read.Dedge{x}.id |
+                Write.Dedge{z}.id |
+                id
+            ) | 
+            id
+        ) |
+        id
+    )
+    --> /o (
+    Node.(
+        Read.Dedge{m}.id|
+        Write.Dedge{o}.id |
+        id
+    ) | /c /a
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{z}.Loc{c} | id ) | 
+        Body.Region(0).id |
+        id
+    )
+)
+    @[2, 3, 4, 0, 1, 5, 6]
+    ## if !Loc{a} in param
+    ;
+
+## react opt_ivr_mark_unsuitable = 
+##     Node.(
+##         NodeType.Theta |
+##         Import.(Dedge{x}.Loc{a})
+##         Body.Region(0).(
+##             Node.(
+##                 Read.(Dedge{x}.id | id) |
+##                 Extra.id
+##                 | id
+##             ) |
+##             id        
+##         ) |
+##         Export.(Dedge{y}.Loc{a} | id) |
+##         id
+##     )
+##     -->
+##     Node.(
+##         NodeType.Theta |
+##         Import.(Dedge{x}.Loc{a})
+##         Body.Region(0).(
+##             Node.(
+##                 Read.(Dedge{x}.id | id) |
+##                 Extra.(
+##                     FlagIVR.Unsuitable |
+##                     id
+##                 )
+##                 | id
+##             ) |
+##             id        
+##         ) |
+##         Export.(Dedge{y}.Loc{a} | id) |
+##         id
+##     )
+##     ;
+
+## react opt_ivr_mark_suitable = 
+##     Node.(
+##         Extra.id |
+##         id
+##     )
+##     -->
+##     Node.(
+##         Extra.(
+##             FlagIVR.Suitable |
+##             id
+##         ) |
+##         id
+##     )
+##     if !FlagIVR in param
+##     ;
+
+## react opt_ivr = 
+##     Node.(
+##         NodeType.Theta |
+##         Body.Region(0).(
+##             Node.(
+##                 Extra.(
+##                     FlagIVR.Suitable |
+##                     id
+##                 ) |
+##                 id
+##             ) |
+##             id        
+##         ) |
+##         id
+##     )
+##     -->
+##     Node.(
+##         Extra.id |
+##         id
+##     ) |
+##     Node.(
+##         NodeType.Theta |
+##         Body.Region(0).id |
+##         id
+##     )
+##     ;
+
+## react opt_fix_ = 
+
+    
+
+
+
+
+## Some fix rules for the invariant value elimination (and possibly others?)
+
+
+# ## ## Misc ## ## #
 ## Aliasing fixes
 react aliasing_connect = 
     Alias{x,y}.AliasNewName{u} || 
@@ -70,3 +225,5 @@ react aliasing_finish = /x /y
     -->
     1 | {u}
     ;
+
+
