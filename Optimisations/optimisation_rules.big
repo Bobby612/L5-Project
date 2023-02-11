@@ -54,6 +54,52 @@ react opt_common_node_elimination_load =
     ) 
     @[0, 1, 2];
 
+## # Node Pull In -- Gamma
+fun react opt_node_pull_in(i) = /x /b (
+    Node.(
+        Read.id |
+        Write.Dedge{x}.Loc{a}
+    ) |
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{x}.Loc{b} | id) | 
+        Import.(Dedge{y}.Loc{b} | id) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.(Dedge{y}.Loc{c}) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        )
+    )
+)
+    --> 
+    Node.(
+        NodeType.Gamma |
+        Read.(id | id) | 
+        Import.(id | id) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.id |
+                    Write.Dedge{y}.Loc{a}
+                ) |
+                Node.(
+                    Read.(Dedge{y}.Loc{c}) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        )
+    )
+    @[0, 1, 0, 2, 0, 3, 4, 5]
+    ;
+
+
 
 ## # Invariant Value Redirection -- Theta Node
 react opt_invariant_value_redirect_theta_2_read = /a /b
@@ -207,7 +253,64 @@ react opt_invariant_value_redirect_theta_1_read = /a
 
 
 
-## Some fix rules for the invariant value elimination (and possibly others?)
+## Some fix rules 
+react opt_fix_remove_unused_import = /y /a
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.(Dedge{y}.Loc{a} | id) |
+        id
+    )
+    -->
+    Node.(
+        Read.id |
+        Import.id |
+        id
+    ) | {x}
+    ;
+
+fun react opt_fix_gamma_read(i) = 
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.(Dedge{x}.Loc{a} | id) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.(Dedge{x}.Loc{a}  | id) |
+                    id
+                ) |
+                id
+            )
+        ) |
+        id
+    )
+    --> /b /y
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{x}.Loc{b} | id) |
+        Import.(Dedge{y}.Loc{b} | id) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.(Dedge{y}.Loc{a}  | id) |
+                    id
+                ) |
+                id
+            )
+        ) |
+        id
+    )
+    ;
+
+react opt_deduplicate_import_read = /b (
+    Read.(Dedge{z}.Loc{a} | Dedge{z}.Loc{b} | id) |
+    Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) 
+)
+    --> /u (
+    Read.(Dedge{z}.Loc{a} | id) |
+    Import.(Dedge{u}.Loc{a} | Alias{x,y}.AliasNewName{u}| id)
+)
+    ;
 
 
 # ## ## Misc ## ## #
