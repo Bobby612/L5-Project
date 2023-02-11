@@ -1,6 +1,11 @@
 begin brs 
     init cfg;
-    rules = [   ## Create the control tree
+    rules = [   
+                ## Aliasing rules
+                (aliasing_connect),
+                (aliasing_finish),
+
+                ## Create the control tree
                 (ct_deabstractify(0), ct_deabstractify(1), ct_deabstractify(2)), 
                 (ct_continuous, ct_if_then_else, 
                 ct_if_then(1,2), ct_if_then(2,1),
@@ -14,26 +19,20 @@ begin brs
                 (rg_disconnect_dedge_read, rg_disconnect_dedge_write),
                 (rg_connect_node_read_to_export),
                 (rg_connect_write_to_export),
-                ## (rg_connect_read_to_import),
-                ## (rg_add_write_to_export, rg_add_read_to_import),
-                ## (rg_add_state, rg_connect_state),
-                ## (rg_if_then_else_connect_conditional),
-                ## {rg_disconnect_dedge_read, rg_disconnect_dedge_write},
-                ## {rg_connect_node_read_to_export},
-                ## {rg_connect_write_to_export},
-                {rg_connect_read_to_import},
-                {rg_add_write_to_export, rg_add_read_to_import},
-                {rg_add_state, rg_connect_state},
-                {rg_gamma_connect_conditional},
-                {rg_self_loop_connect_conditional},
+                (rg_connect_read_to_import),
+                (rg_add_write_to_export, rg_add_read_to_import),
+                (rg_add_state, rg_connect_state),
+                (rg_disconnect_loc_new_node),
+                (rg_disconnect_loc_new_node_import,
+                rg_disconnect_loc_new_node_export),
+                (rg_gamma_connect_conditional),
+                (rg_self_loop_connect_conditional),
                 {rg_finish_node},
-                (aliasing_connect),
-                (aliasing_finish),
-                {rg_continuous_connect_state},
-                {rg_continuous_connect_export_1_to_import_2_remove_export_1},
-                {rg_continuous_connect_export_1_to_import_2},
-                {rg_continuous_connect_import_1_to_import_2,
-                rg_continuous_remove_export_1},
+                (rg_continuous_connect_state),
+                (rg_continuous_connect_export_1_to_import_2_remove_export_1),
+                (rg_continuous_connect_export_1_to_import_2),
+                (rg_continuous_connect_import_1_to_import_2,
+                rg_continuous_remove_export_1),
                 {rg_continuous_finish_block},
                 {rg_if_then_else, rg_continuous, rg_self_loop, rg_if_then},
                 {rg_lone_region_void, rg_lone_region_return}

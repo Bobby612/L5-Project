@@ -206,8 +206,8 @@ fun react ct_while_loop(i, j) =  /y (
                 CtSelfLoop |
                 CtBlock(0).CtNode.(
                     CtContinuous |
-                    CtBlock(1).id |
-                    CtBlock(2).id 
+                    CtBlock(1).Block.id |
+                    CtBlock(2).Block.id 
                 )
             ) |
 
@@ -808,7 +808,7 @@ react rg_disconnect_dedge_write = ## includes State
     --> /z
     Node.(
         Write.(Dedge{z}.id | id) |
-        Export.(Dedge{x} | id) |
+        Export.(Dedge{x}.id | id) |
         id
     )
     ;
@@ -832,7 +832,8 @@ react rg_deduplicate_state_write = /x /y
 react rg_connect_node_read_to_export = /z (
     CtBlock(0).Block.(
         Export.(
-            Dedge{x}.Loc{y} | id
+            Dedge{x}.Loc{y} | 
+            id
         ) |
         id
     ) | 
@@ -847,7 +848,8 @@ react rg_connect_node_read_to_export = /z (
     --> (
     CtBlock(0).Block.(
         Export.(
-            Dedge{x}.Loc{y} |id
+            Dedge{x}.Loc{y} | 
+            id
         ) |
         id
     ) | 
@@ -948,7 +950,8 @@ react rg_add_write_to_export = /z (
         id
     )
 )
-    if !{y} in param;
+    ## if !{y} in param
+    ;
 
 react rg_add_read_to_import = /z (
     CtBlock(0).Block.(
@@ -976,7 +979,8 @@ react rg_add_read_to_import = /z (
         id
     )
 )
-    if !{y} in param;
+    ## if !{y} in param
+    ;
 
 react rg_connect_state = /z /w (
     CtBlock(0).Block.(
@@ -1057,6 +1061,82 @@ react rg_add_state = (
     )
 )
     if !State in param;
+
+## Disconnect created node from the import/export
+react rg_disconnect_loc_new_node = 
+    CtBlock(0).Block.(
+        Import.(Dedge{z}.Loc{y} | id) | 
+        Export.(Dedge{w}.Loc{y} | id) |
+        id
+    ) | 
+    Node.(
+        Read.(Dedge{z}.Loc{y} | id) |
+        Import.(Dedge{a}.Loc{y} | id) |
+        Export.(Dedge{b}.Loc{y} | id) |
+        Write.(Dedge{w}.Loc{y} | id) |
+        id
+    )
+    --> /n (
+        CtBlock(0).Block.(
+        Import.(Dedge{z}.Loc{y} | id) | 
+        Export.(Dedge{w}.Loc{y} | id) |
+        id
+    ) | 
+    Node.(
+        Read.(Dedge{z}.Loc{n} | id) |
+        Import.(Dedge{a}.Loc{n} | id) |
+        Export.(Dedge{b}.Loc{n} | id) |
+        Write.(Dedge{w}.Loc{n} | id) |
+        id
+    )
+)
+    ;
+
+react rg_disconnect_loc_new_node_import = 
+    CtBlock(0).Block.(
+        Import.(Dedge{z}.Loc{y} | id) |
+        id
+    ) | 
+    Node.(
+        Read.(Dedge{z}.Loc{y} | id) |
+        Import.(Dedge{a}.Loc{y} | id) |
+        id
+    )
+    --> /n (
+        CtBlock(0).Block.(
+        Import.(Dedge{z}.Loc{y} | id) | 
+        id
+    ) | 
+    Node.(
+        Read.(Dedge{z}.Loc{n} | id) |
+        Import.(Dedge{a}.Loc{n} | id) |
+        id
+    )
+)
+    ;
+
+react rg_disconnect_loc_new_node_export = 
+    CtBlock(0).Block.(
+        Export.(Dedge{w}.Loc{y} | id) |
+        id
+    ) | 
+    Node.(
+        Export.(Dedge{b}.Loc{y} | id) |
+        Write.(Dedge{w}.Loc{y} | id) |
+        id
+    )
+    --> /n (
+        CtBlock(0).Block.(
+        Export.(Dedge{w}.Loc{y} | id) |
+        id
+    ) | 
+    Node.(
+        Export.(Dedge{b}.Loc{n} | id) |
+        Write.(Dedge{w}.Loc{n} | id) |
+        id
+    )
+)
+    ;
     
 
 
