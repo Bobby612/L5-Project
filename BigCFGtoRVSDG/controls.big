@@ -19,6 +19,7 @@ atomic ctrl Gamma = 0;
 atomic ctrl Theta = 0;
 
 atomic ctrl Simple = 0;
+ctrl Multiplex = 0;
 
 ## RVSDG Node Body Types (Region and Simple Nodes)
 fun ctrl Region(i) = 0;
