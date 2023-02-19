@@ -312,7 +312,7 @@ react rg_if_then =
         CtIfThen |
 
         CtBlock(0).Block.id |
-        CtBlock(1).Block.(Import.id | Export.id | Body.id)
+        CtBlock(1).Block.(Import.id | Export.id | Body.Region(0).id)
     )
     -->
     CtNode.(
@@ -323,7 +323,7 @@ react rg_if_then =
             NodeType.Gamma |
             Read.id |
             Import.id | ## Import
-            Body.id |
+            Body.Region(1).id |
             Export.id  | ## Export
             Write.id |
             Extra.1
@@ -339,8 +339,8 @@ react rg_if_then_else =
         CtIfThenElse |
 
         CtBlock(0).Block.id |
-        CtBlock(1).Block.(Import.id | Export.id | Body.id) |
-        CtBlock(2).Block.(Import.id | Export.id | Body.id) 
+        CtBlock(1).Block.(Import.id | Export.id | Body.Region(0).id) |
+        CtBlock(2).Block.(Import.id | Export.id | Body.Region(0).id) 
     )
     -->
     CtNode.(
@@ -352,7 +352,7 @@ react rg_if_then_else =
             Read.(id | id) |
             Import.id | Import.id | ## Import
             Body.(
-                id | id
+                Region(1).id | Region(2).id
             ) |
             Export.id | Export.id  | ## Export
             Write.(id | id)
