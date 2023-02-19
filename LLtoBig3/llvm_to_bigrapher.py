@@ -636,6 +636,9 @@ def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
     closures = []
     read_addres, closure = create_address(instruction[2], 1)
     closures += [closure]
+    
+    write_addres, closure = create_address(instruction[-3])
+    # print(closure)
     if closure in state_dict:
         in_state = f"Dedge{{{state_dict[closure]}}}.State"
         closures += [ " /" + state_dict[closure] ]
@@ -645,7 +648,6 @@ def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
         in_state = f"Dedge{{state_{state}}}.State"
         state_dict[closure] = f"state_{closure[2:]}"
         out_state = f"Dedge{{{state_dict[closure]}}}.State"
-    write_addres, closure = create_address(instruction[-3])
     closures += [closure]
     instruction_info["write"] = [ out_state ]
     
