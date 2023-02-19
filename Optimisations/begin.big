@@ -4,8 +4,14 @@ begin brs
     rules = [   
                 (aliasing_connect),
                 (aliasing_finish),
+                {opt_bypass_mux_fin_total},
+                {opt_bypass_mux_imported_adr_2gamma},
+                {opt_bypass_mux_imported_adr(i)},
+                {opt_bypass_mux_simple},
+                
+                ## {opt_bypass_mux_allocated_adr(i)},
                 {opt_fix_gamma_read(i)},
-                {opt_deduplicate_import_read},
+                (opt_deduplicate_import_read),
                 (opt_fix_remove_unused_import),
                 {opt_common_node_elimination_load, opt_common_node_elimination_add, 
                  opt_invariant_value_redirect_theta_2_read, opt_invariant_value_redirect_theta_1_read,

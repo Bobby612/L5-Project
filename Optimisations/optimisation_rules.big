@@ -32,14 +32,14 @@ react opt_common_node_elimination_load =
     Node.(
         NodeType.Simple |
         Body.Load |
-        Read.Dedge{x}.id |
+        Read.(Dedge{x}.id | Dedge{s}.State) |
         Write.Dedge{z}.id |
         id
     ) |
     Node.(
         NodeType.Simple |
         Body.Load |
-        Read.Dedge{x}.id |
+        Read.(Dedge{x}.id | Dedge{s}.State) |
         Write.Dedge{w} |
         id
     )
@@ -47,7 +47,7 @@ react opt_common_node_elimination_load =
     Node.(
         NodeType.Simple |
         Body.Add |
-        Read.Dedge{x}.id |
+        Read.(Dedge{x}.id | Dedge{s}.State) |
         Write.Dedge{u}.id |
         Alias{z,w}.AliasNewName{u} |
         id
@@ -58,7 +58,8 @@ react opt_common_node_elimination_load =
 fun react opt_node_pull_in(i) = /x /b (
     Node.(
         Read.id |
-        Write.Dedge{x}.Loc{a}
+        Write.Dedge{x}.Loc{a} |
+        id
     ) |
     Node.(
         NodeType.Gamma |
@@ -73,7 +74,8 @@ fun react opt_node_pull_in(i) = /x /b (
                 id
             ) |
             id
-        )
+        ) | 
+        id
     )
 )
     --> 
@@ -85,7 +87,8 @@ fun react opt_node_pull_in(i) = /x /b (
             Region(i).(
                 Node.(
                     Read.id |
-                    Write.Dedge{y}.Loc{a}
+                    Write.Dedge{y}.Loc{a} | 
+                    id
                 ) |
                 Node.(
                     Read.(Dedge{y}.Loc{c}) |
@@ -94,9 +97,10 @@ fun react opt_node_pull_in(i) = /x /b (
                 id
             ) |
             id
-        )
+        ) |
+        id
     )
-    @[0, 1, 0, 2, 0, 3, 4, 5]
+    @[0, 2, 0, 3, 0, 1, 4, 5, 6, 7]
     ;
 
 
@@ -250,6 +254,223 @@ react opt_invariant_value_redirect_theta_1_read = /a
 
     
 
+## Multiplexer Madness
+
+fun react opt_bypass_mux_imported_adr(i) = 
+    Node.(
+        Read.(Dedge{x}.id | id) |
+        Write.(Dedge{y}.State | id) |
+        id
+    ) |
+    Multiplex.(
+        Read.(Dedge{y}.State | id) |
+        Write.Dedge{z}.State
+    ) 
+    |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | Dedge{z}.State | id) | 
+        Import.(Dedge{w}.Loc{a} | Dedge{u}.State | id ) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.(Dedge{w}.id | Dedge{u}.State | id) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) | 
+        id
+    ) 
+    -->
+    Node.(
+        Read.(Dedge{x}.id | id) |
+        Write.(Dedge{y}.State | id) |
+        id
+    ) |
+    Multiplex.(
+        Read.id |
+        Write.Dedge{z}.State
+    ) 
+    | 
+    /b /v
+    Node.(
+        Read.(Dedge{x}.Loc{a} | Dedge{y}.Loc1{b}.State | Dedge{z}.State | id) | 
+        Import.(Dedge{w}.Loc{a} | Dedge{v}.Loc1{b}.State | Dedge{u}.State | id ) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.(Dedge{w}.id | Dedge{v}.State | id) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) | 
+        id
+    )
+    ;
+
+react opt_bypass_mux_imported_adr_2gamma = 
+    Node.(
+        Read.(Dedge{x}.id | id) |
+        Write.(Dedge{y}.State | id) |
+        id
+    ) |
+    Multiplex.(
+        Read.(Dedge{y}.State | id) |
+        Write.Dedge{z}.State
+    ) 
+    |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | Dedge{z}.State | id) | 
+        Import.(Dedge{w}.Loc{a} | Dedge{u}.State | id ) |
+        Import.(Dedge{s}.Loc{a} | Dedge{t}.State | id ) |
+        Body.(
+            Region(1).(
+                Node.(
+                    Read.(Dedge{w}.id | Dedge{u}.State | id) |
+                    id
+                ) |
+                id
+            ) |
+            Region(2).(
+                Node.(
+                    Read.(Dedge{s}.id | Dedge{t}.State | id) |
+                    id
+                ) |
+                id
+            )
+        ) | 
+        id
+    ) 
+    -->
+    Node.(
+        Read.(Dedge{x}.id | id) |
+        Write.(Dedge{y}.State | id) |
+        id
+    ) |
+    Multiplex.(
+        Read.id |
+        Write.Dedge{z}.State
+    ) 
+    | 
+    /b /v /r
+    Node.(
+        Read.(Dedge{x}.Loc{a} | Dedge{y}.Loc1{b}.State | Dedge{z}.State | id) | 
+        Import.(Dedge{w}.Loc{a} | Dedge{v}.Loc1{b}.State | Dedge{u}.State | id ) |
+        Import.(Dedge{s}.Loc{a} | Dedge{r}.Loc1{b}.State | Dedge{t}.State | id ) |
+        Body.(
+            Region(1).(
+                Node.(
+                    Read.(Dedge{w}.id | Dedge{v}.State | id) |
+                    id
+                ) |
+                id
+            ) |
+            Region(2).(
+                Node.(
+                    Read.(Dedge{s}.id | Dedge{r}.State | id) |
+                    id
+                ) |
+                id
+            )
+        ) | 
+        id
+    )
+    ;
+
+
+react opt_bypass_mux_simple = ### If two nodes are on the opposite sides of a multiplexer, they cannot share a value
+    Node.(
+        Read.(Dedge{x}.id | id) |
+        Write.(Dedge{y}.State | id) |
+        id
+    ) |
+    Multiplex.(
+        Read.(Dedge{y}.State | id) |
+        Write.Dedge{z}.State
+    ) |
+    Node.(
+        Read.(Dedge{x}.id | Dedge{z}.State | id) |
+        id
+    ) 
+    -->
+    Node.(
+        Read.(Dedge{x}.id | id) |
+        Write.(Dedge{y}.State | id) |
+        id
+    ) |
+    Multiplex.(
+        Read.(Dedge{y}.State | id) |
+        Write.Dedge{z}.State
+    ) |
+    Node.(
+        Read.(Dedge{x}.id | Dedge{y}.State | id) |
+        id
+    ) 
+    ;
+
+
+react opt_bypass_mux_fin_total = 
+    /z
+    Multiplex.(
+        Read.id |
+        Write.Dedge{z}.State
+    ) 
+    -->
+    1
+    @[];
+
+
+
+## fun react opt_bypass_mux_allocated_adr(i) = 
+##     Node.(
+##         Body.Alloca |
+##         Read.1 |
+##         Write.(Dedge{y}.State | Dedge{x}.id | id) |
+##         id
+##     ) |
+##     Multiplex.(
+##         Read.(Dedge{y}.State | id) |
+##         Write.Dedge{z}.State
+##     ) |
+##     Node.(
+##         Read.(Dedge{x}.Loc{a} | Dedge{z}.State | id) | 
+##         Import.(Dedge{w}.Loc{a} | Dedge{u}.State | id ) |
+##         Body.Region(i).(
+##             Node.(
+##                 Read.(Dedge{w}.id | Dedge{u}.State | id) |
+##                 id
+##             ) |
+##             id
+##         ) | 
+##         id
+##     ) 
+##     -->
+##     Node.(
+##         Body.Alloca |
+##         Read.1 |
+##         Write.(Dedge{y}.State | Dedge{x}.id | id) |
+##         id
+##     ) |
+##     Multiplex.(
+##         Read.id |
+##         Write.Dedge{z}.State
+##     ) | /b /v
+##     Node.(
+##         Read.(Dedge{x}.Loc{a} | Dedge{y}.Loc1{b}.State | Dedge{z}.State | id) | 
+##         Import.(Dedge{w}.Loc{a} | Dedge{v}.Loc1{b}.State | Dedge{u}.State | id ) |
+##         Body.Region(i).(
+##             Node.(
+##                 Read.(Dedge{w}.id | Dedge{v}.State | id) |
+##                 id
+##             ) |
+##             id
+##         ) | 
+##         id
+##     )
+##     ;
 
 
 
@@ -280,7 +501,8 @@ fun react opt_fix_gamma_read(i) =
                     id
                 ) |
                 id
-            )
+            ) | 
+            id
         ) |
         id
     )
@@ -296,7 +518,8 @@ fun react opt_fix_gamma_read(i) =
                     id
                 ) |
                 id
-            )
+            ) |
+            id
         ) |
         id
     )
