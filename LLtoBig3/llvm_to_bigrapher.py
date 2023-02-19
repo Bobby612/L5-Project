@@ -270,7 +270,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
                 instruction_node, closure, function_address = translate_instruction_alloca(str(instruction), state_dict)
                 closures.update(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
-                function_addresses.append(function_address)
+                # function_addresses.append(function_address)
             case "getelementptr":
                 instruction_node, closure = translate_instruction_getelementptr(instruction)
                 closures.update(closure)
@@ -284,7 +284,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
     )"""]
 
     closures.update(map(lambda x : " /" + x,list(state_dict.values())))
-    closures.update([f" /state_{state+1}"])
+    closures.update([f" /state_{state+1}", f" /state_0"])
 
     import_address = list(import_address & set(function_addresses))
     import_address = list(map(create_address2, import_address))
@@ -304,7 +304,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
     # if state != 0:
     #     state_closure = f" /state_{state}"
     state_import = [f"Dedge{{state_0}}.State"]
-    state_export = [f"Dedge{{state_{state}}}.State"]
+    state_export = [f"Dedge{{state_{state+1}}}.State"]
     # else:
     #     state_closure = ""
     #     state_import = []
