@@ -368,7 +368,7 @@ react rg_gamma_connect_conditional =
         CtBlock(0).Block.(
             Body.Region(0).(
                 Node.(
-                    Body.Br |
+                    Body.Instruction("Br") |
                     Write.1 |
                     id
                 ) |
@@ -388,7 +388,7 @@ react rg_gamma_connect_conditional =
         CtBlock(0).Block.(
             Body.Region(0).(
                 Node.(
-                    Body.Br |
+                    Body.Instruction("Br") |
                     Write.Dedge{x}.Branch |
                     id
                 ) |
@@ -437,7 +437,7 @@ react rg_self_loop_connect_conditional =
         Import.id | ## Import
         Body.Region(0).(
             Node.(
-                Body.Br |
+                Body.Instruction("Br") |
                 Write.1 |
                 id
             ) |
@@ -453,7 +453,7 @@ react rg_self_loop_connect_conditional =
         Import.id | ## Import
         Body.Region(0).(
             Node.(
-                Body.Br |
+                Body.Instruction("Br") |
                 Write.Dedge{x}.Branch |
                 id
             ) |
@@ -483,6 +483,68 @@ react rg_finish_node =
         | id
     )
     @[1, 3, 2];
+
+react rg_lone_region_imports = 
+    Node.(
+        NodeType.Lambda |
+        Import.(/x Dedge{x}.Loc{a} | id) |
+        Body.Region(0).Ct.CtNode.(
+            CtTopNode |
+            CtBlock(0).Block.(
+                Import.(Dedge{y}.Loc{a} | id) |
+                Body.Region(0).id |
+                Export.id
+            )
+        ) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Lambda |
+        Import.(Dedge{y}.Loc{a} | id) |
+        Body.Region(0).Ct.CtNode.(
+            CtTopNode |
+            CtBlock(0).Block.(
+                Import.id |
+                Body.Region(0).id |
+                Export.id
+            )
+        ) |
+        id
+    )
+    ;
+
+react rg_lone_region_exports = 
+    Node.(
+        NodeType.Lambda |
+        Body.Region(0).Ct.CtNode.(
+            CtTopNode |
+            CtBlock(0).Block.(
+                id |
+                Export.(Dedge{y}.Loc{a} | id)
+            )
+        ) |
+        Extra.DataTypes.(Loc1{b}.Loc1{a}.State | id) |
+        Export.id |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Lambda |
+        Body.Region(0).Ct.CtNode.(
+            CtTopNode |
+            CtBlock(0).Block.(
+                id |
+                Export.id
+            )
+        ) |
+        Extra.DataTypes.(Loc1{b}.Loc1{a}.State | id) |
+        Export.(Dedge{y}.Loc{a} | id) |
+        id
+    )
+    ;
+
+
 
 react rg_lone_region_void = 
     Node.(

@@ -14,27 +14,28 @@ begin brs
                 {ct_top_node}, ## Make sure one CT is completed before starting another
                 {ct_begin},
                 ## Create RVSDG from CT
-                (rg_deduplicate_read, rg_deduplicate_write,
-                rg_deduplicate_state_read, rg_deduplicate_state_write),
+                (rg_deduplicate_read, rg_deduplicate_write),
+                ## rg_deduplicate_state_read, rg_deduplicate_state_write),
                 (rg_disconnect_dedge_read, rg_disconnect_dedge_write),
                 (rg_connect_node_read_to_export),
                 (rg_connect_write_to_export),
                 (rg_connect_read_to_import),
                 (rg_add_write_to_export, rg_add_read_to_import),
-                (rg_add_state, rg_connect_state),
+                ## (rg_add_state, rg_connect_state),
                 (rg_disconnect_loc_new_node),
                 (rg_disconnect_loc_new_node_import,
                 rg_disconnect_loc_new_node_export),
                 (rg_gamma_connect_conditional),
                 (rg_self_loop_connect_conditional),
                 {rg_finish_node},
-                (rg_continuous_connect_state),
+                ## (rg_continuous_connect_state),
                 (rg_continuous_connect_export_1_to_import_2_remove_export_1),
                 (rg_continuous_connect_export_1_to_import_2),
                 (rg_continuous_connect_import_1_to_import_2,
                 rg_continuous_remove_export_1),
                 {rg_continuous_finish_block},
                 {rg_if_then_else, rg_continuous, rg_self_loop, rg_if_then},
+                {rg_lone_region_imports, rg_lone_region_exports},
                 {rg_lone_region_void, rg_lone_region_return}
                   ];
 end

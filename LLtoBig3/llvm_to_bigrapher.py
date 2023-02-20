@@ -96,6 +96,8 @@ def parse_function(function: ValueRef):
     blocks = []
     labels = []
     addresses = []
+    label_state:set[int] = set()
+    label_state_connect = []
 
     read_labels = []
     import_labels_adr = []
@@ -107,10 +109,11 @@ def parse_function(function: ValueRef):
         address, closure = create_address(arg[1], i)
         import_labels_adr += [address]
         closed_links += [closure[2:], f"adr_{i}" ]
+        addresses += [str(i)]
 
 
     for b in function.blocks:
-        block, labels, addresses, cfg_node_entrance = parse_block(b, labels, addresses)
+        block, labels, addresses, cfg_node_entrance = parse_block(b, labels, addresses, label_state)
         blocks += [block]
         closed_links += [cfg_node_entrance]
     
@@ -126,7 +129,11 @@ def parse_function(function: ValueRef):
         import_labels_adr += [f"Dedge{{label_{l}}}.Loc{{flabel_{i}}}"]
         closed_links += [ f"label_{l}", f"flabel_{i}"]
 
-    
+    for i in label_state:
+        import_labels_adr += [f"Dedge{{label_s_{i}}}.Loc{{flabel_s_{i}}}"]
+        closed_links += [f"label_s_{i}", f"flabel_s_{i}"]
+        label_state_connect += [f"Loc1{{flabel_{i}}}.Loc1{{flabel_s_{i}}}.State"]
+
     for a in addresses:
         # import_labels_adr += [f"Dedge{{label_{a}}}.Loc{{adr_{a}}}"]
 
@@ -143,19 +150,20 @@ Node.(
     Body.Region(0).(
         {join_or_1(''' |
         ''', blocks)}
-    ) |
-    Extra.DataTypes.( {join_or_1(" | ", types)} 
+    ) | /e
+    Extra.DataTypes.( {join_or_1(" | ", types + label_state_connect + ["Loc1{e}.Loc1{adr_s_met_state}.State"])} 
     ) |
     Export.({join_or_1(" | ", export)}) |
     Write.Dedge{{label_write_{export_name}}}.Loc{{flabel_0}}
 )
 """, f"label_write_{export_name}", import_function_itself
 
-def parse_block(block:ValueRef, labels:list, function_addresses:list):
+def parse_block(block:ValueRef, labels:list, function_addresses:list, label_state:set[int]):
     entrance_register = ""
     exit_register = ""
     state = 0
     state_dict = {}
+    no_import_state = []
     ret_label = False
 
     # function_addresses = []
@@ -181,7 +189,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
 
     for instruction in block.instructions:
         match instruction.opcode:
-            case "add" | "sub" | "mul" | "shl" | "srem" | "urem" :
+            case "add" | "sub" | "mul" | "shl" | "srem" | "urem" | "sdiv":
                 instruction_node, closure = translate_instruction_quad(str(instruction))
                 closures.update(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
@@ -190,6 +198,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
                 closures.update(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
                 if is_label:
+                    export_labels.add(closure[1])
                     if load_address in labels:
                         import_labels.add((load_address, labels.index(load_address)))
                     else:
@@ -200,21 +209,23 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
 
             case "store":
                 instruction_node, closure, store_address, is_label = translate_instruction_store(str(instruction), state, state_dict)
+                for ra in instruction_node["read_addresses"]:
+                    ## fixes a specific case where the function argument is stored
+                    if ra[0] == "%":
+                        import_address.add(ra[1:])
                 closures.update(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
                 if is_label:
                     if store_address in labels:
-                        export_labels.add((store_address, labels.index(store_address)))
+                        export_labels.add(closure[1])
                     else:
                         labels.append(store_address)
-                        export_labels.add((store_address, labels.index(store_address)))
+                        export_labels.add(closure[1])
                 else:
                     export_address.add(store_address)
                     if store_address not in function_addresses:
                         function_addresses.append(store_address)
 
-                
-                
             case "br":
                 match translate_instruction_br(instruction):
                     case str(string):
@@ -227,7 +238,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
             case "call":
                 instruction_string = str(instruction)
                 i = instruction_string.index("@")
-                j = instruction_string.index("(")
+                j = instruction_string[i:].index("(") + i
                 function_label = instruction_string[i+1:j].replace("_","__").replace(".","_")
 
                 if function_label in labels:
@@ -236,7 +247,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
                     labels.append(function_label)
                     import_labels.add((function_label, labels.index(function_label)))
                     closures.add("/label_" + function_label)
-                instruction_node, closure, label = translate_instruction_call_complex(instruction, "@" + function_label, state, instruction_string[i:j])
+                instruction_node, closure, label = translate_instruction_call_complex(instruction, "@" + function_label, state_dict, instruction_string[i:j])
                 
                 closures.update(closure)
 
@@ -269,23 +280,29 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
             case "alloca":
                 instruction_node, closure, function_address = translate_instruction_alloca(str(instruction), state_dict)
                 closures.update(closure)
+                no_import_state += closure
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
                 # function_addresses.append(function_address)
             case "getelementptr":
                 instruction_node, closure = translate_instruction_getelementptr(instruction)
                 closures.update(closure)
                 block_body += [ output_bigraph_simple_node(instruction_node)]
+            case "sext":
+                instruction_node, closure = translate_instruction_sext(instruction)
+                closures.update(closure)
+                block_body += [ output_bigraph_simple_node(instruction_node)]
+
             case other:
                 print(f"Unknown instruction {other}")
 
-    block_body += [f"""    Multiplex.(
-        Read.({join_or_1(" | ", [f"Dedge{{state_{state}}}.State"] + list(map(lambda x: f"Dedge{{{state_dict[x]}}}.State", state_dict.keys() )))}) |
-        Write.Dedge{{state_{state+1}}}.State
-    )"""]
+    # block_body += [f"""    Multiplex.(
+    #     Read.({join_or_1(" | ", [f"Dedge{{state_{state}}}.State"] + list(map(lambda x: f"Dedge{{{state_dict[x]}}}.State", state_dict.keys() )))}) |
+    #     Write.Dedge{{state_{state+1}}}.State
+    # )"""]
 
     closures.update(map(lambda x : " /" + x,list(state_dict.values())))
-    closures.update([f" /state_{state+1}", f" /state_0"])
 
+    # print(import_address, function_addresses)
     import_address = list(import_address & set(function_addresses))
     import_address = list(map(create_address2, import_address))
     import_labels = list(import_labels)
@@ -293,23 +310,39 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list):
 
     export_address = list(export_address)
     export_address = list(map(create_address2, export_address))
-    export_labels = list(export_labels)
-    export_labels = list(map(create_label2, export_labels))
+    # export_labels = list(export_labels)
+    # export_labels = list(map(create_label2, export_labels))
 
     if ret_label:
         ret_label = ["Dedge{return_address}.Loc{adr_return}"]
     else:
         ret_label = []
 
-    # if state != 0:
-    #     state_closure = f" /state_{state}"
-    state_import = [f"Dedge{{state_0}}.State"]
-    state_export = [f"Dedge{{state_{state+1}}}.State"]
-    # else:
-    #     state_closure = ""
-    #     state_import = []
-    #     state_export = []
+    state_import = [] ##  f"state_{closure[2:]}"
+    state_export = []
 
+    for k,v in state_dict.items():
+        closures.add(f" /state_{k[2:]}")
+        # print(k, str(export_labels) )
+        if k in export_labels:
+            
+            i = labels.index(k[8:])
+            loc = f"flabel_s_{i}"
+            label_state.add(i)
+        else:
+            loc = f"s_{k[2:]}"
+            if loc not in function_addresses:
+                    function_addresses += [loc]
+            loc = f"adr_{loc}"
+        
+        if k in no_import_state:
+            state_export += [f"Dedge{{{v}}}.Loc{{{loc}}}"]
+        else:
+            if v == f"state_{k[2:]}":
+                state_import += [f"Dedge{{{v}}}.Loc{{{loc}}}"]
+            else:
+                state_import += [f"Dedge{{state_{k[2:]}}}.Loc{{{loc}}}"]
+                state_export += [f"Dedge{{{v}}}.Loc{{{loc}}}"]
 
     return\
 f"""
@@ -324,7 +357,7 @@ Block.(
         {join_or_1(''' |
         ''', block_body)}
     ) |
-    Export.({join_or_1(" | ", export_address + export_labels + ret_label + state_export)})
+    Export.({join_or_1(" | ", ret_label + state_export + export_address)})
 
 )
 """, labels, function_addresses, entrance_register
@@ -339,15 +372,25 @@ def create_label2(label):
 
 
 
-def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int, name_og):
+def translate_instruction_call_complex(instruction:ValueRef, name:str, state_dict:dict[str,str], name_og):
     instruction_2_split = str(instruction).split(name_og)
     call_info = instruction_2_split[0]
-    closures = [f" /state_{state}"]
+    if " /met_state" not in state_dict:
+        in_state =  f"Dedge{{met_state}}.Loc{{adr_s}}"
+        state_dict[" /met_state"] = "met_states"
+        closures = [" /met_state"]
+        out_state = f"Dedge{{{state_dict[' /met_state']}}}.Loc{{adr_s}}"
+    else:
+        in_state = f"Dedge{{{state_dict[' /met_state']}}}.Loc{{adr_s}}"
+        closures = [ " /" + state_dict[" /met_state"]]
+        state_dict[" /met_state"] = state_dict[" /met_state"] + "s"
+        out_state = f"Dedge{{{state_dict[' /met_state']}}}.Loc{{adr_s}}"
+
     labels = []
     instruction_info = {}
-    instruction_info["in_instruction"] = ["/adr_0", "/adr_1"]
+    instruction_info["in_instruction"] = ["/adr_0", "/adr_1", "/adr_s"]
     instruction_info["opcode"] = "Call"
-    instruction_info["write"] = [f"Dedge{{state_{state+1}}}.State"]
+    instruction_info["write"] = [out_state]
 
     function_adr, closure = create_address(name, 1)
     closures += [closure]
@@ -359,8 +402,8 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state:int
         instruction_info["write"] += [ adr ]
         
     
-    instruction_info["type"] = []
-    instruction_info["read"] = [ f"Dedge{{state_{state}}}.State", function_adr ]
+    instruction_info["type"] = ["Loc1{adr_s}.State"]
+    instruction_info["read"] = [ in_state, function_adr ]
     j = 2
     gep = False
     gep_expr = ""
@@ -492,6 +535,26 @@ Node.(
     # instruction_info["read"] = [ ]
     # instruction_info["type"] = [  ]
     # instruction_info["options"] = []
+    # instruction_info["in_instruction"] = []
+
+def translate_instruction_sext(instruction):
+    instruction = str(instruction).split()
+    instruction_info = {}
+    closures = []
+    instruction_info["opcode"] = "Sext"
+    address_write, closure = create_address(instruction[0])
+    closures += [closure]
+    instruction_info["write"] = [address_write]
+
+    address_read, closure = create_address(instruction[4], 1)
+    closures += [closure]
+    
+    instruction_info["read"] = [address_read]
+    instruction_info["type"] = [transform_type(instruction[-1]), transform_type(instruction[3], 1)  ]
+    instruction_info["options"] = []
+    instruction_info["in_instruction"] = ["/adr_0", "/adr_1"]
+
+    return instruction_info, closures
 
 
 def translate_instruction_getelementptr(instruction:ValueRef):
@@ -527,11 +590,11 @@ def translate_instruction_alloca(instruction, state_dict):
     instruction_info["opcode"] = "Alloca"
     write_address, closure = create_address(instruction[0])
     state_dict[closure] = f"state_{closure[2:]}"
-    instruction_info["write"] = [write_address, f"Dedge{{{state_dict[closure]}}}.State" ]
+    instruction_info["write"] = [write_address, f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}" ]
     instruction_info["read"] = [ ]
-    instruction_info["type"] = [ transform_type(instruction[3][:-1])  ]
+    instruction_info["type"] = [ transform_type(instruction[3][:-1]), "Loc1{adr_s}.State"  ]
     instruction_info["options"] = []
-    instruction_info["in_instruction"] = ["/adr_0"]
+    instruction_info["in_instruction"] = ["/adr_0", "/adr_s"]
     return instruction_info, [closure], instruction[0][1:]
 
 def translate_instruction_bitcast(instruction):
@@ -613,20 +676,23 @@ def translate_instruction_load(instruction, state, state_dict):
     read_address, closure = create_address(instruction[-3], 1)
 
     if closure in state_dict:
-        state_string = f"Dedge{{{state_dict[closure]}}}.State"
+        state_string = f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}"
     else:
-        state_string = f"Dedge{{state_{state}}}.State"
+        state_dict[closure] = f"state_{closure[2:]}"
+        state_string = f"Dedge{{state_{closure[2:]}}}.Loc{{adr_s}}"
 
     closures += [closure]
     instruction_info["read"] = [ read_address, state_string ]
-    instruction_info["type"] = [ transform_type(instruction[3][:-1]), transform_type(instruction[4], 1) ]
+    instruction_info["type"] = [ transform_type(instruction[3][:-1]),
+                                 transform_type(instruction[4], 1),
+                                 "Loc1{adr_s}.State" ]
     instruction_info["options"] = []
 
     label = False
     if instruction[-3][0] == "@":
         label = True
 
-    instruction_info["in_instruction"] = ["/adr_0", "/adr_1"]
+    instruction_info["in_instruction"] = ["/adr_0", "/adr_1", "/adr_s"]
     return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label, 
 
 def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
@@ -640,26 +706,29 @@ def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
     write_addres, closure = create_address(instruction[-3])
     # print(closure)
     if closure in state_dict:
-        in_state = f"Dedge{{{state_dict[closure]}}}.State"
+        in_state = f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}"
         closures += [ " /" + state_dict[closure] ]
         state_dict[closure] += "s"
-        out_state = f"Dedge{{{state_dict[closure]}}}.State"
+        out_state = f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}"
     else:
-        in_state = f"Dedge{{state_{state}}}.State"
-        state_dict[closure] = f"state_{closure[2:]}"
-        out_state = f"Dedge{{{state_dict[closure]}}}.State"
+        in_state = f"Dedge{{state_{closure[2:]}}}.Loc{{adr_s}}"
+        state_dict[closure] = f"state_{closure[2:]}s"
+        out_state = f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}"
     closures += [closure]
     instruction_info["write"] = [ out_state ]
     
     instruction_info["read"] = [ read_addres, write_addres, in_state ]
-    instruction_info["type"] = [ transform_type(instruction[1], 1), transform_type(instruction[3], 0)]
+    instruction_info["type"] = [ transform_type(instruction[1], 1), 
+                                transform_type(instruction[3], 0),
+                                "Loc1{adr_s}.State"]
     instruction_info["options"] = []
 
     label = False
     if instruction[-3][0] == "@":
         label = True
 
-    instruction_info["in_instruction"] = ["/adr_0", "/adr_1"]
+    instruction_info["in_instruction"] = ["/adr_0", "/adr_1", "/adr_s"]
+    instruction_info["read_addresses"] = [instruction[-3][:-1].replace("_","__").replace(".","_"), instruction[2][:-1].replace("_","__").replace(".","_") ]
     return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label
 
 def translate_instruction_quad(instruction):
@@ -704,7 +773,7 @@ f"""
 {" ".join(info["in_instruction"])}
 Node.(
     NodeType.Simple |
-    Body.{info["opcode"]} |
+    Body.Instruction("{info["opcode"]}") |
     Read.({join_or_1(" | ",info["read"])}) |
     Write.({join_or_1(" | ",info["write"])}) |
     Extra.(
