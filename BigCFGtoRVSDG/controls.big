@@ -24,21 +24,22 @@ ctrl Multiplex = 0;
 ## RVSDG Node Body Types (Region and Simple Nodes)
 fun ctrl Region(i) = 0;
 
-## atomic ctrl Add = 0;
-## atomic ctrl Sub = 0;
-## atomic ctrl Mul = 0;
-## atomic ctrl Shl = 0; 
-## atomic ctrl Srem = 0;
-## atomic ctrl Urem = 0;
-## atomic ctrl Load = 0;
-## atomic ctrl Store = 0;
-## atomic ctrl Br = 0;
-## atomic ctrl Call = 0;
-## atomic ctrl Icmp = 0;
-## atomic ctrl Ret = 0;
-## atomic ctrl Bitcast = 0;
-## atomic ctrl Alloca = 0;
-## atomic ctrl Getelementptr = 0;
+atomic ctrl Add = 0;
+atomic ctrl Sub = 0;
+atomic ctrl Mul = 0;
+atomic ctrl Shl = 0; 
+atomic ctrl Srem = 0;
+atomic ctrl Urem = 0;
+atomic ctrl Load = 0;
+atomic ctrl Store = 0;
+atomic ctrl Br = 0;
+atomic ctrl Call = 0;
+atomic ctrl Icmp = 0;
+atomic ctrl Ret = 0;
+atomic ctrl Bitcast = 0;
+atomic ctrl Alloca = 0;
+atomic ctrl Getelementptr = 0;
+atomic ctrl Sext = 0;
 atomic ctrl Literal = 0;
 atomic fun ctrl Instruction(s) = 0;
 

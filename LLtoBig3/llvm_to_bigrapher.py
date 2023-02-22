@@ -158,6 +158,8 @@ Node.(
 )
 """, f"label_write_{export_name}", import_function_itself
 
+constant_blocks = []
+
 def parse_block(block:ValueRef, labels:list, function_addresses:list, label_state:set[int]):
     entrance_register = ""
     exit_register = ""
@@ -165,6 +167,8 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list, label_stat
     state_dict = {}
     no_import_state = []
     ret_label = False
+    global constant_blocks
+    constant_blocks = []
 
     # function_addresses = []
     
@@ -299,6 +303,8 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list, label_stat
     #     Read.({join_or_1(" | ", [f"Dedge{{state_{state}}}.State"] + list(map(lambda x: f"Dedge{{{state_dict[x]}}}.State", state_dict.keys() )))}) |
     #     Write.Dedge{{state_{state+1}}}.State
     # )"""]
+
+    block_body = constant_blocks + block_body
 
     closures.update(map(lambda x : " /" + x,list(state_dict.values())))
 
@@ -855,8 +861,26 @@ def create_address(number_string, order=0):
 
     if not str.isdigit(number_string[-1]):
         number_string = number_string[:-1]
+
+    global constant_blocks
     
-    return f"Loc1{{adr_{order}}}.Const({number_string})", ""
+    dedge = f"Dedge{{constant_{len(constant_blocks)}}}.Loc{{adr_{order}}}"
+    closure = f" /constant_{len(constant_blocks)}"
+
+    constant_blocks += [
+f"""
+/adr_0
+Node.(
+    NodeType.Simple |
+    Body.Literal |
+    Read.1 |
+    Write.Dedge{{constant_{len(constant_blocks)}}}.Loc{{adr_0}} |
+    Extra.DataTypes.(Loc1{{adr_0}}.DataType(0,-1) | Loc1{{adr_0}}.Const({number_string}) )
+)
+"""
+    ]
+    
+    return dedge, closure
 
 def join_or_1(join_string, join_list):
     ret = join_string.join(join_list)

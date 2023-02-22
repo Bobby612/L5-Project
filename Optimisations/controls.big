@@ -39,7 +39,9 @@ atomic ctrl Ret = 0;
 atomic ctrl Bitcast = 0;
 atomic ctrl Alloca = 0;
 atomic ctrl Getelementptr = 0;
+atomic ctrl Sext = 0;
 atomic ctrl Literal = 0;
+atomic fun ctrl Instruction(s) = 0;
 
 ## Address Controls
 ctrl Dedge = 1;
@@ -82,9 +84,5 @@ atomic ctrl CtWhileLoop = 0;
 atomic ctrl CtTopNode = 0;
 
 
-big cfg = 1; 
+big cfg = 1;
 
-## Optimisation Flags
-ctrl FlagIVR = 0;
-atomic ctrl Suitable = 0;
-atomic ctrl Unsuitable = 0;

@@ -35,7 +35,7 @@ begin brs
                 rg_continuous_remove_export_1),
                 {rg_continuous_finish_block},
                 {rg_if_then_else, rg_continuous, rg_self_loop, rg_if_then},
-                {rg_lone_region_imports, rg_lone_region_exports},
+                (rg_lone_region_imports, rg_lone_region_exports),
                 {rg_lone_region_void, rg_lone_region_return}
                   ];
 end
