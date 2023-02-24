@@ -174,8 +174,98 @@ react opt_node_pushout_theta_1_read = /a
     ## if !Loc{a} in param
     ;
 
+react opt_node_pushout_theta_store = /a /b  ## Store is idempotent, so doing it once or doing it multiple times is the same if the arguments are the same
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | id) | 
+        Body.Region(0).(
+            Node.(
+                Body.Instruction("Store") |
+                Read.(Dedge{x}.id | Dedge{y}.id | Dedge{z}.Loc{d}) |
+                Extra.(DataTypes.(Loc1{d}.State | id) | id )|
+                Write.Dedge{w}.Loc{d} |
+                id
+            ) | 
+            id
+        ) |
+        id
+    )
+    --> /p (
+    Node.(
+        Body.Instruction("Store") |
+        Read.(Dedge{m}.id | Dedge{n}.id | Dedge{o}.Loc{d}) |
+        Extra.(DataTypes.(Loc1{d}.State | id) | id )|
+        Write.Dedge{p}.Loc{d} |
+        id
+    ) | /a /b /e
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | Dedge{p}.Loc{e} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | Dedge{w}.Loc{e} | id) | 
+        Body.Region(0).id |
+        id
+    )
+)
+    @[2, 3, 4, 5, 6, 0, 1, 7, 8]
+    ## if !({a} || {b}) in param
+    ;
+
+## # Invariant Value Redirection -- actually
+react opt_invariant_value_redirection_theta = /y 
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.(Dedge{y}.Loc{a} | id) |
+        Export.(Dedge{y}.Loc{b} | id) |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    --> /u
+    Alias{x,z}.AliasNewName{u} |
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    ;
+
 
 ## Some fix rules 
+react opt_fix_remove_unused_read = ## Used in IVR 
+    /a 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        id
+    )
+    -->
+    {x} |
+    Node.(
+        Read.id |
+        id
+    )
+    ;
+
+react opt_fix_remove_unused_write = ## Used in IVR 
+    /a 
+    Node.(
+        Write.(Dedge{x}.Loc{a} | id) |
+        id
+    )
+    -->
+    {x} |
+    Node.(
+        Write.id |
+        id
+    )
+    ;
+
+
+
+
 react opt_fix_remove_unused_import = /y /a
     Node.(
         Read.(Dedge{x}.Loc{a} | id) |

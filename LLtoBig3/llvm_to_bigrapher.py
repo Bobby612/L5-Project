@@ -142,7 +142,7 @@ def parse_function(function: ValueRef):
 
     return \
 f"""
-{" ".join( list(map(lambda x: "/" + x, closed_links)))} /flabel_0
+{" ".join( list(map(lambda x: "/" + x, closed_links)))} /flabel_0 /adr_s_met_state
 Node.(
     NodeType.Lambda |
     Read.({join_or_1(" | ", read_labels)}) |
@@ -363,7 +363,7 @@ Block.(
         {join_or_1(''' |
         ''', block_body)}
     ) |
-    Export.({join_or_1(" | ", ret_label + state_export + export_address)})
+    Export.({join_or_1(" | ", ret_label + state_export)})
 
 )
 """, labels, function_addresses, entrance_register

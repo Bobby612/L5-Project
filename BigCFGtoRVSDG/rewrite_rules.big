@@ -1203,8 +1203,25 @@ react rg_disconnect_loc_new_node_export =
     ;
     
 
-
-
+## If an import is directly exported, then it is not changed
+## react rg_disconnect_unchanged_imports = 
+##     Node.(
+##         Read.(Dedge{x}.Loc{a} | id)
+##         Import.(Dedge{y}.Loc{a} | id) |
+##         Export.(Dedge{y}.Loc{a} | id) |
+##         Write.(Dedge{z}.Loc{a} | id) |
+##         id
+##     )
+##     -->
+##     Node.(
+##         Alias{x,z}.AliasNewName{u} |
+##         Read.(Dedge{u}.Loc{a} | id)
+##         Import.(Dedge{y}.Loc{a} | id) |
+##         Export.id |
+##         Write.id |
+##         id
+##     )
+##     ;
 
 
 
