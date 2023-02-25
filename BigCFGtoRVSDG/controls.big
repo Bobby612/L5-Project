@@ -56,6 +56,8 @@ atomic ctrl Branch = 0;
 ## Aliasing implementation
 ctrl Alias = 2;
 atomic ctrl AliasNewName = 1;
+ctrl New = 1;
+atomic ctrl Old = 1;
 
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;

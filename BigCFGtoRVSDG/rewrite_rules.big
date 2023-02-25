@@ -1127,6 +1127,110 @@ react rg_add_state = (
     if !State in param;
 
 ## Disconnect created node from the import/export
+react rg_disconnect_loc_new_node_start_import = 
+    CtBlock(0).Block.(
+        Import.(Dedge{m}.Loc{a} | id) |
+        id
+    ) |
+    Node.(
+        Read.(Dedge{m}.Loc{a} | id ) |
+        id
+    )
+    -->
+    CtBlock(0).Block.(
+        Import.(Dedge{m}.Loc{a} | id) |
+        id
+    ) | /b
+    Node.(
+        Read.(Dedge{m}.Loc{b} | id ) |
+        New{b}.Old{a} |
+        id
+    )
+    ;
+
+react rg_disconnect_loc_new_node_start_export = 
+    CtBlock(0).Block.(
+        Export.(Dedge{m}.Loc{a} | id) |
+        id
+    ) |
+    Node.(
+        Write.(Dedge{m}.Loc{a} | id ) |
+        id  
+    )
+    -->
+    CtBlock(0).Block.(
+        Export.(Dedge{m}.Loc{a} | id) |
+        id
+    ) | /b
+    Node.(
+        Write.(Dedge{m}.Loc{b} | id ) |
+        New{b}.Old{a} |
+        id
+    )
+    ;
+
+react rg_disconnect_loc_new_node_iter_r = 
+    Node.(
+        Read.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    -->
+    Node.(
+        Read.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    ;
+
+react rg_disconnect_loc_new_node_iter_i = 
+    Node.(
+        Import.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    -->
+    Node.(
+        Import.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    ;
+
+react rg_disconnect_loc_new_node_iter_e = 
+    Node.(
+        Export.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    -->
+    Node.(
+        Export.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    ;
+
+react rg_disconnect_loc_new_node_iter_w = 
+    Write.(
+        Read.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    -->
+    Write.(
+        Read.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a} |
+        id
+    )
+    ;
+
+react rg_disconnect_loc_new_node_fin =
+    New{b}.Old{a}
+    -->
+    1 | {a} | {b}
+    ;
+
 react rg_disconnect_loc_new_node = 
     CtBlock(0).Block.(
         Import.(Dedge{z}.Loc{y} | id) | 
