@@ -58,6 +58,7 @@ ctrl Alias = 2;
 atomic ctrl AliasNewName = 1;
 ctrl New = 1;
 atomic ctrl Old = 1;
+atomic fun ctrl ID(i) = 0;
 
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;
