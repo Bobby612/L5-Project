@@ -173,6 +173,7 @@ react opt_node_pushout_theta_1_read = /a
     @[2, 3, 4, 0, 1, 5, 6]
     ## if !Loc{a} in param
     ;
+    
 
 react opt_node_pushout_theta_store = /a /b  ## Store is idempotent, so doing it once or doing it multiple times is the same if the arguments are the same
     Node.(
@@ -211,10 +212,113 @@ react opt_node_pushout_theta_store = /a /b  ## Store is idempotent, so doing it 
     ## if !({a} || {b}) in param
     ;
 
+## # Node Push Out -- Gamma Node
+fun react opt_node_pushout_2_gamma_2_comm(s) = 
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | id) |
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) |
+        Body.(
+            Region(1).(
+                Node.(
+                    Body.Instruction(s) |
+                    Read.(Dedge{q}.id | Dedge{r}.id) |
+                    Write.Dedge{t}.id |
+                    id
+                ) | 
+                id
+            ) |
+            Region(2).(
+                Node.(
+                    Body.Instruction(s) | 
+                    Read.(Dedge{x}.id | Dedge{y}.id) |
+                    Write.Dedge{z}.id |
+                    id
+                ) |
+                id
+            )
+        ) |
+        id
+    )
+    --> 
+    /p (
+    Node.(
+        Body.Instruction(s) |
+        Read.(Dedge{m}.id | Dedge{n}.id) |
+        Write.Dedge{p}.id |
+        id
+    ) | /d
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{p}.Loc{d} | id) |
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | Dedge{t}.Loc{d} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{d} |id) |
+        Body.(
+            Region(1).id |
+            Region(2).id
+        ) |
+        id
+    )
+)
+    @[3, 4, 5, 6, 0, 1, 2, 7, 12, 13]
+    ;
+
+fun react opt_node_pushout_2_gamma_3_comm(s) = 
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | Dedge{s}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | id) |
+        Body.(
+            Region(1).(
+                Node.(
+                    Body.Instruction(s) |
+                    Read.(Dedge{q}.id | Dedge{r}.id | Dedge{s}.id) |
+                    Write.Dedge{t}.id |
+                    id
+                ) | 
+                id
+            ) |
+            Region(2).(
+                Node.(
+                    Body.Instruction(s) | 
+                    Read.(Dedge{x}.id | Dedge{y}.id | Dedge{z}.id) |
+                    Write.Dedge{w}.id |
+                    id
+                ) |
+                id
+            )
+        ) |
+        id
+    )
+    --> 
+    /p (
+    Node.(
+        Body.Instruction(s) |
+        Read.(Dedge{m}.id | Dedge{n}.id | Dedge{o}.id) |
+        Write.Dedge{p}.id |
+        id
+    ) | /d
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | Dedge{p}.Loc{d} | id) |
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | Dedge{s}.Loc{c} | Dedge{t}.Loc{d} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | Dedge{w}.Loc{d} | id) |
+        Body.(
+            Region(1).id |
+            Region(2).id
+        ) |
+        id
+    )
+)
+    @[3, 4, 5, 6, 7, 0, 1, 2, 8, 14, 15]
+    ;
+
+
 ## # Invariant Value Redirection -- actually
 react opt_invariant_value_redirection_theta = /y 
     Node.(
-        NodeType.Theta |
         Read.(Dedge{x}.Loc{a} | id) |
         Import.(Dedge{y}.Loc{a} | id) |
         Export.(Dedge{y}.Loc{b} | id) |
@@ -224,7 +328,6 @@ react opt_invariant_value_redirection_theta = /y
     --> /u
     Alias{x,z}.AliasNewName{u} |
     Node.(
-        NodeType.Theta |
         Read.(Dedge{x}.Loc{a} | id) |
         Import.id |
         Export.id |
@@ -232,6 +335,7 @@ react opt_invariant_value_redirection_theta = /y
         id
     )
     ;
+
 
 
 ## Some fix rules 
@@ -247,6 +351,7 @@ react opt_fix_remove_unused_read = ## Used in IVR
         Read.id |
         id
     )
+    if !Simple in param
     ;
 
 react opt_fix_remove_unused_write = ## Used in IVR 
@@ -261,9 +366,21 @@ react opt_fix_remove_unused_write = ## Used in IVR
         Write.id |
         id
     )
+    if !Simple in param
     ;
 
 
+react opt_fix_consolidate_read = 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | Dedge{x}.Loc{b} | id) |
+        id
+    ) 
+    --> /u
+    Node.(
+        Read.(Dedge{x}.Loc{u} |  Alias{a,b}.AliasNewName{u} | id) |
+        id
+    ) 
+    ;
 
 
 react opt_fix_remove_unused_import = /y /a

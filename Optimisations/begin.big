@@ -6,6 +6,7 @@ begin brs
     rules = [   
                 (aliasing_connect),
                 (aliasing_finish),
+                {opt_fix_consolidate_read},
                 
                 {opt_fix_gamma_read(i)},
                 {opt_fix_remove_unused_read, opt_fix_remove_unused_write},
@@ -15,8 +16,10 @@ begin brs
                     opt_common_node_elimination_2_comm(s_instr_2_com),
                     opt_node_pushout_theta_2_read, opt_node_pushout_theta_1_read, opt_node_pushout_theta_store,
                     opt_node_pull_in(i),
-                    opt_invariant_value_redirection_theta,
-                    opt_deduplicate_import_read
+                    opt_invariant_value_redirection,
+                    opt_deduplicate_import_read,
+                    opt_node_pushout_2_gamma_2_comm(s_instr_2_com),
+                    opt_node_pushout_2_gamma_3_comm("Store")
                  }
                   ];
 end
