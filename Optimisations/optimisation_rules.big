@@ -317,7 +317,7 @@ fun react opt_node_pushout_2_gamma_3_comm(s) =
 
 
 ## # Invariant Value Redirection -- actually
-react opt_invariant_value_redirection_theta = /y 
+react opt_invariant_value_redirection = /y 
     Node.(
         Read.(Dedge{x}.Loc{a} | id) |
         Import.(Dedge{y}.Loc{a} | id) |
@@ -336,6 +336,368 @@ react opt_invariant_value_redirection_theta = /y
     )
     ;
 
+## # Theta-Gamma Inversion
+react opt_theta_gamma_inversion = /a
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{x}.Loc{a} | id) | #0
+        Import.(Dedge{y}.Loc{a} | id) | #1
+        Body.Region(0).(
+            Node.(
+                NodeType.Gamma |
+                Read.(Dedge{y}.Branch | id) | #2
+                Import.(ID(1) | id) | #3
+                Import.(ID(2) | id) | #4
+                Body.(
+                    Region(1).id | Region(2).id #5,6
+                ) |
+                Export.(ID(1) | id) | #7
+                Export.(ID(2) | id) | #8
+                Write.id #9
+            ) |
+            id #10
+        ) |
+        Export.id | #11
+        Write.id #12 |
+    )
+    -->
+    Node.(
+        NodeType.GammaThetaIntermediate | {y} |
+        Read.(Dedge{x}.Branch | id) | # 0
+        Import.(ID(1) | id) | # 1
+        Import.(ID(2) | id) | # 1
+        Body.(
+            Region(1).(
+                Node.(
+                    NodeType.GammaThetaIntermediate |
+                    Read.id | # 2
+                    Import.id | # 3
+                    Body.Region(0).id |# 5
+                    Export.id | # 7
+                    Write.id  # 9
+                ) |
+                id # 10
+            ) |
+            Region(2).(
+                Node.(
+                    NodeType.GammaThetaIntermediate |
+                    Read.id | # 2
+                    Import.id | # 4
+                    Body.Region(0).id | # 6
+                    Export.id | # 8
+                    Write.id  # 9
+                ) |
+                id # 10
+            )
+        )
+        |
+        Export.(ID(1) | id) | # 11
+        Export.(ID(2) | id) | # 11
+        Write.id # 12
+    )
+    @[0, 1, 1, 2, 3, 5, 7, 9, 10, 2, 4, 6, 8, 9, 10, 11, 11, 12]
+    ;
+
+react opt_fix_gamma_theta_final = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.(
+            Region(1).Node.(
+                NodeType.GammaThetaIntermediate |
+                id
+            ) |
+            Region(2).Node.(
+                NodeType.GammaThetaIntermediate |
+                id
+            )
+        ) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Gamma |
+        Body.(
+            Region(1).Node.(
+                NodeType.Theta |
+                id
+            ) |
+            Region(2).Node.(
+                NodeType.Theta |
+                id
+            )
+        ) |
+        id
+    )
+    ;
+
+react opt_fix_gamma_theta_add_inner = 
+    Node.id |
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.Region(0).id |
+        id
+    )
+    -->
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.Region(0).(id | id) |
+        id
+    )
+    ;
+
+fun react opt_fix_gamma_theta_connect_inner_r(i) = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Import.(Dedge{x}.id | id ) |
+        Body.(
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Read.id |
+                Import.id |
+                Body.Region(0).(
+                    Node.(
+                        Read.(Dedge{x}.id | id) |
+                        id
+                    ) | 
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    --> /u
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Import.(Dedge{u}.id | id) |
+        Body.( /a
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Read.(Dedge{u}.Loc{a} | id ) |
+                Import.(Dedge{x}.Loc{a} | id) |
+                Body.Region(0).(
+                    Node.(
+                        Read.(Dedge{x}.id | id) |
+                        id
+                    ) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    ;
+
+fun react opt_fix_gamma_theta_connect_inner_w(i) = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Export.(Dedge{x}.id | id) |
+        Body.(
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Write.id |
+                Export.id |
+                Body.Region(0).(
+                    Node.(
+                        Write.(Dedge{x}.id | id) |
+                        id
+                    ) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    --> /u
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Export.(Dedge{u}.id | id) |
+        Body.( /a
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Write.(Dedge{u}.Loc{a} | id ) |
+                Export.(Dedge{x}.Loc{a} | id) |
+                Body.Region(0).(
+                    Node.(
+                        Write.(Dedge{x}.id | id) |
+                        id
+                    ) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    ;
+
+fun react opt_fix_move_branch(i) = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.(
+            Region(i).(
+                NodeType.GammaThetaIntermediate |
+                Import.(Dedge{x}.Loc{a} | id) |
+                Write.(Dedge{y}.Loc{a} | id) |
+                id
+            ) |
+            id
+        ) |
+        Import.(Dedge{y}.Branch | id) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.(
+            Region(i).(
+                NodeType.GammaThetaIntermediate |
+                Import.(Dedge{x}.Branch | id) |
+                Write.id | {a} | {y} |
+                id
+            ) |
+            id
+        ) |
+        Import.id |
+        id
+    )
+    ;
+
+
+
+react opt_fix_disconnect_edges_in_regions_new_r = 
+    Body.(
+        Region(1).(
+            Node.(
+                Read.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        ) |
+        Region(2).(
+            Node.(
+                Read.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        )
+    )
+    --> /b /y 
+    Body.(
+        Region(1).(
+            Node.(
+                Read.(
+                    Dedge{y}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        ) |
+        New{y}.Old{x} |
+        New{b}.Old{a} |
+        Region(2).(
+            Node.(
+                Read.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        )
+    )
+    ;
+    
+react opt_fix_disconnect_edges_in_regions_new_w = 
+Body.(
+    Region(1).(
+        Node.(
+            Write.(
+                Dedge{x}.Loc{a} | id
+            ) |
+            id      
+        ) |
+        id
+    ) |
+    Region(2).(
+        Node.(
+            Write.(
+                Dedge{x}.Loc{a} | id
+            ) |
+            id      
+        ) |
+        id
+    )
+)
+    --> /b /y 
+    Body.(
+        Region(1).(
+            Node.(
+                Write.(
+                    Dedge{y}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        ) |
+        New{y}.Old{x} |
+        New{b}.Old{a} |
+        Region(2).(
+            Node.(
+                Write.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        )
+    )
+    ;
+
+react opt_fix_disconnect_edges_in_regions_d = 
+    New{y}.Old{x} |
+    Region(2).id ||
+    Dedge{x}.id
+    -->
+    New{y}.Old{x} |
+    Region(2).id ||
+    Dedge{y}.id
+    ;
+
+react opt_fix_disconnect_edges_in_regions_l = 
+    New{y}.Old{x} |
+    Region(2).id ||
+    Loc{x}
+    -->
+    New{y}.Old{x} |
+    Region(2).id ||
+    Loc{y}
+    ;
+
+react opt_fix_disconnect_edges_in_regions_l1 = 
+    New{y}.Old{x} |
+    Region(2).id ||
+    Loc1{x}.id
+    -->
+    New{y}.Old{x} |
+    Region(2).id ||
+    Loc1{y}.id
+    ;
+
+react opt_fix_disconnect_edges_in_regions_fin = 
+    New{y}.Old{x}
+    -->
+    1 | {y} | {x}
+    ;
 
 
 ## Some fix rules 

@@ -1,25 +1,42 @@
 begin brs 
     int i = {0, 1, 2};
+    int j = {1, 2};
     string s_instr_2_com = {"Add", "Mul", "Load"};
     ## string s_instr_1 = {"Load", }
     init cfg;
     rules = [   
                 (aliasing_connect),
                 (aliasing_finish),
+                
+                (opt_fix_disconnect_edges_in_regions_d,
+                opt_fix_disconnect_edges_in_regions_l,
+                opt_fix_disconnect_edges_in_regions_l1),
+                (opt_fix_disconnect_edges_in_regions_new_r),
+                (opt_fix_disconnect_edges_in_regions_new_w),
+                (opt_fix_disconnect_edges_in_regions_fin),
+                (opt_fix_gamma_theta_add_inner), # gets here
+                {opt_fix_gamma_theta_connect_inner_r(j), opt_fix_gamma_theta_connect_inner_w(j)},
+                {opt_fix_move_branch(j)},
+                {opt_fix_gamma_theta_final},
+
+
+                {opt_deduplicate_import_read},
                 {opt_fix_consolidate_read},
                 
                 {opt_fix_gamma_read(i)},
                 {opt_fix_remove_unused_read, opt_fix_remove_unused_write},
                 ## (),
                 ## (opt_fix_remove_unused_import),
+
+                
                 {
-                    opt_common_node_elimination_2_comm(s_instr_2_com),
+                    ## opt_common_node_elimination_2_comm(s_instr_2_com),
                     opt_node_pushout_theta_2_read, opt_node_pushout_theta_1_read, opt_node_pushout_theta_store,
-                    opt_node_pull_in(i),
-                    opt_invariant_value_redirection,
-                    opt_deduplicate_import_read,
+                    ## opt_node_pull_in(i),
+                    ## opt_invariant_value_redirection,
                     opt_node_pushout_2_gamma_2_comm(s_instr_2_com),
-                    opt_node_pushout_2_gamma_3_comm("Store")
+                    opt_node_pushout_2_gamma_3_comm("Store"),
+                    opt_theta_gamma_inversion
                  }
                   ];
 end

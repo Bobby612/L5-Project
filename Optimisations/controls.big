@@ -18,6 +18,11 @@ atomic ctrl Delta = 0;
 atomic ctrl Gamma = 0;
 atomic ctrl Theta = 0;
 
+## Additional
+atomic ctrl GammaThetaIntermediate = 0;
+ctrl New = 1;
+atomic ctrl Old = 1;
+
 atomic ctrl Simple = 0;
 ctrl Multiplex = 0;
 
@@ -56,6 +61,7 @@ atomic ctrl Branch = 0;
 ## Aliasing implementation
 ctrl Alias = 2;
 atomic ctrl AliasNewName = 1;
+atomic fun ctrl ID(i) = 0;
 
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;
