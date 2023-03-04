@@ -370,6 +370,7 @@ react rg_gamma_connect_conditional =
             Body.Region(0).(
                 Node.(
                     Body.Instruction("Br") |
+                    Read.Dedge{x}.id |
                     Write.1 |
                     id
                 ) |
@@ -383,18 +384,11 @@ react rg_gamma_connect_conditional =
             id
         )
     ) 
-    --> /x (
+    -->
     CtNode.(
         id |
         CtBlock(0).Block.(
-            Body.Region(0).(
-                Node.(
-                    Body.Instruction("Br") |
-                    Write.Dedge{x}.Branch |
-                    id
-                ) |
-                id
-            ) | 
+            Body.Region(0).id | 
             id
         ) |
         Node.(
@@ -406,7 +400,7 @@ react rg_gamma_connect_conditional =
             id
         )
     )
-)
+    @[0, 3, 4, 5, 6]
     ;
 
 react rg_self_loop = 
@@ -438,6 +432,7 @@ react rg_self_loop_connect_conditional =
         Body.Region(0).(
             Node.(
                 Body.Instruction("Br") |
+                Read.Dedge{x}.id |
                 Write.1 |
                 id
             ) |
@@ -446,23 +441,16 @@ react rg_self_loop_connect_conditional =
         Export.id  | ## Export
         Write.id
     )
-    --> /x (
+    -->
     Node.(
         NodeType.Theta |
         Read.id |
         Import.id | ## Import
-        Body.Region(0).(
-            Node.(
-                Body.Instruction("Br") |
-                Write.Dedge{x}.Branch |
-                id
-            ) |
-            id
-        ) |
+        Body.Region(0).id |
         Export.(Dedge{x}.Branch | id)  | ## Export
         Write.id
     )
-)
+    @[0, 1, 4, 5, 6]
     ;
 
 

@@ -709,7 +709,7 @@ def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
     read_addres, closure = create_address(instruction[2], 1)
     closures += [closure]
     
-    write_addres, closure = create_address(instruction[-3])
+    write_addres, closure = create_address(instruction[-3], 2)
     # print(closure)
     if closure in state_dict:
         in_state = f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}"
@@ -725,7 +725,7 @@ def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
     
     instruction_info["read"] = [ read_addres, write_addres, in_state ]
     instruction_info["type"] = [ transform_type(instruction[1], 1), 
-                                transform_type(instruction[3], 0),
+                                transform_type(instruction[3], 2),
                                 "Loc1{adr_s}.State"]
     instruction_info["options"] = []
 
@@ -733,7 +733,7 @@ def translate_instruction_store(instruction, state, state_dict:dict[str,str]):
     if instruction[-3][0] == "@":
         label = True
 
-    instruction_info["in_instruction"] = ["/adr_0", "/adr_1", "/adr_s"]
+    instruction_info["in_instruction"] = ["/adr_2", "/adr_1", "/adr_s"]
     instruction_info["read_addresses"] = [instruction[-3][:-1].replace("_","__").replace(".","_"), instruction[2][:-1].replace("_","__").replace(".","_") ]
     return instruction_info, closures, instruction[-3][1:-1].replace("_","__").replace(".","_"), label
 
