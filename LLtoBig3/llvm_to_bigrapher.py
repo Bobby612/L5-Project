@@ -86,7 +86,7 @@ def create_label3(label):
 
 def parse_function(function: ValueRef):
     func_type = function.type
-    export_name = function.name
+    export_name = str(function.name).replace("_", "__").replace(".", "_")
     export = []
     closed_links = []
     if not str(func_type) == "void":
@@ -180,7 +180,9 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list, label_stat
     export_labels = set()
 
     closures = set()
-    e = str(block).split("\n")[0][:-1]
+    e = str(block).split("\n")[1].split(":")[0]
+    if e[0] not in "1234567890":
+        e = "0"
     entrance_register = "cfg_" + e
 
     # for instruction in block.instructions:
