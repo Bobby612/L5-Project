@@ -89,7 +89,8 @@ def parse_function(function: ValueRef):
     export_name = str(function.name).replace("_", "__").replace(".", "_")
     export = []
     closed_links = []
-    if not str(func_type) == "void":
+    # print(func_type)
+    if not str(func_type)[:4] == "void":
         export += ["Dedge{return_address}.Loc{adr_return}"]
         closed_links += ["return_address", "adr_return"]
     
@@ -281,7 +282,7 @@ def parse_block(block:ValueRef, labels:list, function_addresses:list, label_stat
                 block_body += [ output_bigraph_simple_node(instruction_node) ]
             case "ret":
                 # print(instruction.type)
-                if str(instruction.type) == "void":
+                if str(instruction).split()[1] == "void":
                     continue
                 instruction_node, closure = translate_instruction_ret(str(instruction))
                 closures.update(closure)

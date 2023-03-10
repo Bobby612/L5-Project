@@ -27,7 +27,8 @@ else
     cat "$file" > ../BigCFGtoRVSDG/cfg.big
     cd ../BigCFGtoRVSDG/
     cat controls.big rewrite_rules.big cfgbig.big cfg.big  semicolon.big begin.big > control_flow_bigraph.big
-    bigrapher sim -t .transition/transition -s -f txt,svg control_flow_bigraph.big
+    bigrapher sim -S 5000 -t .transition/transition -s -f txt,svg control_flow_bigraph.big 
+    # bigrapher validate -d . -f txt,svg control_flow_bigraph.big 
     cat `ls -v -r ./.transition/*.txt | head -2 | tail -1` > "../Optimisations/${file%.big}.txt"
     rm ./.transition/*.txt
     cd ../LLtoBig3
