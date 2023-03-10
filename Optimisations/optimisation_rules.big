@@ -352,7 +352,69 @@ react opt_invariant_value_redirection = /y
     ;
 
 ## # Theta-Gamma Inversion
-react opt_theta_gamma_inversion = /a
+## react opt_theta_gamma_inversion = /a
+##     Node.(
+##         NodeType.Theta |
+##         Read.(Dedge{x}.Loc{a} | id) | #0
+##         Import.(Dedge{y}.Loc{a} | id) | #1
+##         Body.Region(0).(
+##             Node.(
+##                 NodeType.Gamma |
+##                 Read.(Dedge{y}.Branch | id) | #2
+##                 Import.(ID(1) | id) | #3
+##                 Import.(ID(2) | id) | #4
+##                 Body.(
+##                     Region(1).id | Region(2).id #5,6
+##                 ) |
+##                 Export.(ID(1) | id) | #7
+##                 Export.(ID(2) | id) | #8
+##                 Write.id #9
+##             ) |
+##             id #10
+##         ) |
+##         Export.id | #11
+##         Write.id #12 |
+##     )
+##     -->
+##     Node.(
+##         NodeType.GammaThetaIntermediate | {y} |
+##         Read.(Dedge{x}.Branch | id) | # 0
+##         Import.(ID(1) | id) | # 1
+##         Import.(ID(2) | id) | # 1
+##         Body.(
+##             Region(1).(
+##                 Node.(
+##                     NodeType.GammaThetaIntermediate |
+##                     Read.id | # 2
+##                     Import.id | # 3
+##                     Body.Region(0).id |# 5
+##                     Export.id | # 7
+##                     Write.id  # 9
+##                 ) |
+##                 id # 10
+##             ) |
+##             Region(2).(
+##                 Node.(
+##                     NodeType.GammaThetaIntermediate |
+##                     Read.id | # 2
+##                     Import.id | # 4
+##                     Body.Region(0).id | # 6
+##                     Export.id | # 8
+##                     Write.id  # 9
+##                 ) |
+##                 id # 10
+##             )
+##         )
+##         |
+##         Export.(ID(1) | id) | # 11
+##         Export.(ID(2) | id) | # 11
+##         Write.id # 12
+##     )
+##     @[0, 1, 1, 2, 3, 5, 7, 9, 10, 2, 4, 6, 8, 9, 10, 11, 11, 12]
+##     ;
+
+## Theta-Gamma inversion (resricted)
+react opt_theta_gamma_inversion_restrict = /a
     Node.(
         NodeType.Theta |
         Read.(Dedge{x}.Loc{a} | id) | #0
@@ -369,11 +431,10 @@ react opt_theta_gamma_inversion = /a
                 Export.(ID(1) | id) | #7
                 Export.(ID(2) | id) | #8
                 Write.id #9
-            ) |
-            id #10
+            ) 
         ) |
-        Export.id | #11
-        Write.id #12 |
+        Export.id | #10
+        Write.id #11 |
     )
     -->
     Node.(
@@ -390,8 +451,7 @@ react opt_theta_gamma_inversion = /a
                     Body.Region(0).id |# 5
                     Export.id | # 7
                     Write.id  # 9
-                ) |
-                id # 10
+                ) 
             ) |
             Region(2).(
                 Node.(
@@ -401,17 +461,18 @@ react opt_theta_gamma_inversion = /a
                     Body.Region(0).id | # 6
                     Export.id | # 8
                     Write.id  # 9
-                ) |
-                id # 10
+                ) 
             )
         )
         |
-        Export.(ID(1) | id) | # 11
-        Export.(ID(2) | id) | # 11
-        Write.id # 12
+        Export.(ID(1) | id) | # 10
+        Export.(ID(2) | id) | # 10
+        Write.id # 11
+
     )
-    @[0, 1, 1, 2, 3, 5, 7, 9, 10, 2, 4, 6, 8, 9, 10, 11, 11, 12]
+    @[0, 1, 1, 2, 3, 5, 7, 9, 2, 4, 6, 8, 9, 10, 10, 11]
     ;
+
 
 react opt_fix_gamma_theta_final = 
     Node.(

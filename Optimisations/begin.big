@@ -35,8 +35,8 @@ begin brs
                     opt_node_pull_in(i),
                     opt_invariant_value_redirection,
                     opt_node_pushout_2_gamma_2_comm(s_instr_2_com),
-                    opt_node_pushout_2_gamma_3_non_comm("Store",1,2), opt_node_pushout_2_gamma_3_non_comm("Store",2,1)
-                    ## opt_theta_gamma_inversion
+                    opt_node_pushout_2_gamma_3_non_comm("Store",1,2), opt_node_pushout_2_gamma_3_non_comm("Store",2,1),
+                    ## opt_theta_gamma_inversion_restrict
                  }
                   ];
 end
