@@ -1,6 +1,15 @@
-## Optimisations expressed as graph rewriting rules
+###
+# Author: Borislav Kratchanov
+# Copyright:
+#
+# Optimisations expressed as graph rewriting rules
+#
+###
 
-## # Common Node Elimination
+
+## ## ## ## ## ## ## ## ## ##
+## Common Node Elimination ##
+## ## ## ## ## ## ## ## ## ##
 
 fun react opt_common_node_elimination_2_comm(s) = 
     Node.(
@@ -56,8 +65,9 @@ fun react opt_common_node_eimination_const(t,c) = ## NB: Datatypes for constants
     Alias{x,y}.AliasNewName{u}
     ;
 
-
-## # Node Pull In -- Gamma
+## ## ## ## ## ## ## ## ## ##
+## Node Pull In  --  Gamma ##
+## ## ## ## ## ## ## ## ## ##
 fun react opt_node_pull_in(i) = /x /b (
     Node.(
         Read.id |
@@ -107,7 +117,10 @@ fun react opt_node_pull_in(i) = /x /b (
     ;
 
 
-## # Node Push Out -- Theta Node
+## ## ## ## ## ## ## ## ## ## ## ##
+## Node Push Out  --  Theta Node ##
+## ## ## ## ## ## ## ## ## ## ## ##
+
 react opt_node_pushout_theta_2_read = /a /b
     Node.(
         NodeType.Theta |
@@ -138,7 +151,6 @@ react opt_node_pushout_theta_2_read = /a /b
     )
 )
     @[2, 3, 4, 5, 0, 1, 6, 7]
-    ## if !({a} || {b}) in param
     ;
 
 react opt_node_pushout_theta_1_read = /a
@@ -171,7 +183,6 @@ react opt_node_pushout_theta_1_read = /a
     )
 )
     @[2, 3, 4, 0, 1, 5, 6]
-    ## if !Loc{a} in param
     ;
     
 
@@ -209,10 +220,11 @@ react opt_node_pushout_theta_store = /a /b  ## Store is idempotent, so doing it 
     )
 )
     @[2, 3, 4, 5, 6, 0, 1, 7, 8]
-    ## if !({a} || {b}) in param
     ;
 
-## # Node Push Out -- Gamma Node
+## ## ## ## ## ## ## ## ## ## ## ##
+## Node Push Out  --  Gamma Node ##
+## ## ## ## ## ## ## ## ## ## ## ##
 fun react opt_node_pushout_2_gamma_2_comm(s) = 
     Node.(
         NodeType.Gamma |
@@ -331,7 +343,10 @@ fun react opt_node_pushout_2_gamma_3_non_comm(s,i,j) =
     ;
 
 
-## # Invariant Value Redirection -- actually
+## ## ## ## ## ## ## ## ## ## ## ## 
+## Invariant Value Redirection   ##
+## ## ## ## ## ## ## ## ## ## ## ## 
+
 react opt_invariant_value_redirection = /y 
     Node.(
         Read.(Dedge{x}.Loc{a} | id) |
@@ -340,8 +355,8 @@ react opt_invariant_value_redirection = /y
         Write.(Dedge{z}.Loc{b} | id) |
         id
     )
-    --> /u
-    Alias{x,z}.AliasNewName{u} |
+    -->
+    IvrMaybe{a,b} |
     Node.(
         Read.(Dedge{x}.Loc{a} | id) |
         Import.id |
@@ -351,7 +366,11 @@ react opt_invariant_value_redirection = /y
     )
     ;
 
-## # Theta-Gamma Inversion
+## ## ## ## ## ## ## ## ## ##
+## Theta-Gamma Inversion   ##
+## ## ## ## ## ## ## ## ## ##
+## NB: not working
+
 ## react opt_theta_gamma_inversion = /a
 ##     Node.(
 ##         NodeType.Theta |
@@ -413,7 +432,8 @@ react opt_invariant_value_redirection = /y
 ##     @[0, 1, 1, 2, 3, 5, 7, 9, 10, 2, 4, 6, 8, 9, 10, 11, 11, 12]
 ##     ;
 
-## Theta-Gamma inversion (resricted)
+## Theta-Gamma inversion (resricted) ##
+## NB: Not Working ##
 react opt_theta_gamma_inversion_restrict = /a
     Node.(
         NodeType.Theta |
@@ -506,6 +526,7 @@ react opt_fix_gamma_theta_final =
     )
     ;
 
+
 react opt_fix_gamma_theta_add_inner = 
     Node.id |
     Node.(
@@ -520,6 +541,7 @@ react opt_fix_gamma_theta_add_inner =
         id
     )
     ;
+
 
 fun react opt_fix_gamma_theta_connect_inner_r(i) = 
     Node.(
@@ -567,6 +589,7 @@ fun react opt_fix_gamma_theta_connect_inner_r(i) =
     )
     ;
 
+
 fun react opt_fix_gamma_theta_connect_inner_w(i) = 
     Node.(
         NodeType.GammaThetaIntermediate |
@@ -613,6 +636,7 @@ fun react opt_fix_gamma_theta_connect_inner_w(i) =
     )
     ;
 
+
 fun react opt_fix_move_branch(i) = 
     Node.(
         NodeType.GammaThetaIntermediate |
@@ -644,7 +668,6 @@ fun react opt_fix_move_branch(i) =
         id
     )
     ;
-
 
 
 react opt_fix_disconnect_edges_in_regions_new_r = 
@@ -693,6 +716,7 @@ react opt_fix_disconnect_edges_in_regions_new_r =
     )
     ;
     
+
 react opt_fix_disconnect_edges_in_regions_new_w = 
 Body.(
     Region(1).(
@@ -739,6 +763,7 @@ Body.(
     )
     ;
 
+
 react opt_fix_disconnect_edges_in_regions_d = 
     New{y}.Old{x} |
     Region(2).id ||
@@ -754,6 +779,7 @@ react opt_fix_disconnect_edges_in_regions_d =
     Export.(ID(2) | id) ||
     Dedge{y}.id
     ;
+
 
 react opt_fix_disconnect_edges_in_regions_l = 
     New{y}.Old{x} |
@@ -771,6 +797,7 @@ react opt_fix_disconnect_edges_in_regions_l =
     Loc{y}
     ;
 
+
 react opt_fix_disconnect_edges_in_regions_l1 = 
     New{y}.Old{x} |
     Region(2).id ||
@@ -787,6 +814,7 @@ react opt_fix_disconnect_edges_in_regions_l1 =
     Loc1{y}.id
     ;
 
+
 react opt_fix_disconnect_edges_in_regions_fin = 
     New{y}.Old{x}
     -->
@@ -794,7 +822,95 @@ react opt_fix_disconnect_edges_in_regions_fin =
     ;
 
 
-## Some fix rules 
+## Fix Rules for the implemented optimisations ##
+
+react opt_fix_finish_ivr = /a /b ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+)
+    --> /u (
+    Alias{x,z}.AliasNewName{u} |
+    Node.(
+        Read.id |
+        Import.id |
+        Export.id |
+        Write.id |
+        id
+    )
+)
+    ;
+
+
+react opt_fix_finish_ivr_read = /a ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+)
+    --> {x} |
+    Node.(
+        Read.id |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id)  |
+        id
+    )
+    ;
+
+
+react opt_fix_finish_ivr_write = /b ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+)
+    --> /u (
+    Alias{x,z}.AliasNewName{u} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.id |
+        id
+    )
+)
+    ;
+
+
+react opt_fix_unfinished_ivr =  ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    -->
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    ;
+
+
 react opt_fix_remove_unused_read = ## Used in IVR 
     /a 
     Node.(
@@ -854,7 +970,7 @@ react opt_fix_remove_unused_import = /y /a ## Used for Node Push Out
     ) | {x}
     ;
 
-fun react opt_fix_gamma_read(i) =  ## Node Pull-in
+fun react opt_fix_gamma_read(i) =  ## Used in Node Pull-in
     Node.(
         NodeType.Gamma |
         Read.(Dedge{x}.Loc{a} | id) |
@@ -881,7 +997,7 @@ fun react opt_fix_gamma_read(i) =  ## Node Pull-in
     )
     ;
 
-fun react opt_fix_gamma_read_iter(i) = ## Node Pull-in
+fun react opt_fix_gamma_read_iter(i) = ## Used in Node Pull-in
     Node.(
         NodeType.Gamma |
         Body.(
@@ -913,14 +1029,14 @@ fun react opt_fix_gamma_read_iter(i) = ## Node Pull-in
     )
     ;
 
-react opt_fix_gamma_read_fin = # Node Pull-in
+react opt_fix_gamma_read_fin = # Used in Node Pull-in
     New{y}.Old{x}
     -->
     1 | {y} | {x}
     ;
 
 
-react opt_deduplicate_import_read = /b ( ## Used in Node pull-in
+react opt_deduplicate_import_read = /b (  ## Used in Node pull-in
     Read.(Dedge{z}.Loc{a} | Dedge{z}.Loc{b} | id) |
     Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) 
 )

@@ -1,3 +1,8 @@
+###
+# Author: Borislav Kratchanov
+# Copyright:
+###
+
 begin brs 
     int i = {0, 1, 2};
     int j = {1, 2};
@@ -19,15 +24,16 @@ begin brs
                 ## {opt_fix_move_branch(j)},
                 ## {opt_fix_gamma_theta_final},
 
+                {opt_fix_finish_ivr},
+                {opt_fix_finish_ivr_read, opt_fix_finish_ivr_write},
+                {opt_fix_unfinished_ivr},
+
                 (opt_fix_gamma_read_iter(j)),
                 (opt_fix_gamma_read_fin),
                 (opt_fix_gamma_read(j)),
                 (opt_deduplicate_import_read),
                 {opt_fix_consolidate_read},
-                {opt_fix_remove_unused_read, opt_fix_remove_unused_write},
-                ## (),
                 {opt_fix_remove_unused_import},
-
                 
                 {
                     opt_common_node_elimination_2_comm(s_instr_2_com),
@@ -35,7 +41,7 @@ begin brs
                     opt_node_pull_in(i),
                     opt_invariant_value_redirection,
                     opt_node_pushout_2_gamma_2_comm(s_instr_2_com),
-                    opt_node_pushout_2_gamma_3_non_comm("Store",1,2), opt_node_pushout_2_gamma_3_non_comm("Store",2,1),
+                    opt_node_pushout_2_gamma_3_non_comm("Store",1,2), opt_node_pushout_2_gamma_3_non_comm("Store",2,1)
                     ## opt_theta_gamma_inversion_restrict
                  }
                   ];

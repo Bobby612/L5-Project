@@ -1,8 +1,0 @@
-digraph "cfg.dot" {
-newrank = true;
-stylesheet = "style.css";
-r0 [ label="0", style="dashed", shape=box, width=.28, height=.18, fontname="serif", fontsize=9.0 ];
-{ rank=source; r0 };
-
-edge [ color=green, arrowhead=none, arrowtail=none, arrowsize=0.3 ];
-}

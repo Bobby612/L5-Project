@@ -1,3 +1,8 @@
+###
+# Author: Borislav Kratchanov
+# Copyright:
+###
+
 ## RVSD Node Info
 ctrl Node = 0;
 ctrl NodeType = 0;
@@ -22,6 +27,7 @@ atomic ctrl Theta = 0;
 atomic ctrl GammaThetaIntermediate = 0;
 ctrl New = 1;
 atomic ctrl Old = 1;
+atomic ctrl IvrMaybe = 2;
 
 atomic ctrl Simple = 0;
 ctrl Multiplex = 0;
