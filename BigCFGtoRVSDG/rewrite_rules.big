@@ -1,6 +1,11 @@
+###
+# Author: Borislav Kratchanov
+# Copyright:
+###
 
-
-## Transform Control Flow Graph to Control Tree
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## Rules to Transform Control Flow Graph to Control Tree ##
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 react ct_begin = 
     Node.(
         NodeType.Lambda |
@@ -19,6 +24,7 @@ react ct_begin =
     )
     if !Ct in param
     ;
+
 
 react ct_continuous = /y (
     Block.(
@@ -58,6 +64,7 @@ react ct_continuous = /y (
     ) 
 )
     @[1, 0, 2, 3];
+
 
 react ct_if_then_else = /y /z (
     Block.(
@@ -106,6 +113,7 @@ react ct_if_then_else = /y /z (
 )
     ;
 
+
 fun react ct_if_then(i, j) = /y (
     Block.(
         Interface.(
@@ -143,6 +151,8 @@ fun react ct_if_then(i, j) = /y (
 )
     ;
 
+
+
 fun react ct_selfloop(i, j) = ## The self-loop can be either the first or the second exit
     Block.(
         Interface.(
@@ -171,6 +181,7 @@ fun react ct_selfloop(i, j) = ## The self-loop can be either the first or the se
     ) 
 )
     ;
+
 
 fun react ct_while_loop(i, j) =  /y (
     Block.(
@@ -255,7 +266,11 @@ fun react ct_deabstractify(i) = /a (
     ;
 
 
-## Transform the Control Tree to RVSDG
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+## Rules to Transform the Control Tree to RVSDG ##
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+
+## Start and Finish rules ##
 
 react rg_continuous = 
     CtNode.(
@@ -278,6 +293,7 @@ react rg_continuous =
         )
     )
     ;
+
 
 react rg_continuous_finish_block = 
     CtNode.(
@@ -306,6 +322,7 @@ react rg_continuous_finish_block =
         Body.Region(0).(id | id | id)
     )
     @[0, 3, 1, 4, 2, 5, 6];
+
 
 react rg_if_then = 
     CtNode.(
@@ -363,6 +380,80 @@ react rg_if_then_else =
     if !CtNode in param
     ;
 
+
+react rg_self_loop = 
+    CtNode.(
+        CtSelfLoop |
+        CtBlock(0).Block.(Import.id | Export.id | Body.Region(0).id)
+    )
+    -->
+    CtNode.(
+        CtSelfLoop |
+
+        CtBlock(0).Block.(Import.1 | Export.1 | Body.Region(0).1) |
+        Node.(
+            NodeType.Theta |
+            Read.id |
+            Import.id | ## Import
+            Body.Region(0).id |
+            Export.id  | ## Export
+            Write.id 
+        )
+    )
+    @[0, 0, 2, 1, 1];
+
+
+react rg_finish_node = 
+    CtNode.(
+        id |
+        CtBlock(0).Block.(
+            Body.Region(0).id |
+            id
+        ) |
+        Node.id
+    ) 
+    -->
+    Block.(
+        Body.Region(0).(
+            id | Node.id
+        )
+        | id
+    )
+    @[1, 3, 2];
+
+
+## Connect Conditionals for Gamma and Theta Nodes ##
+
+react rg_self_loop_connect_conditional = 
+    Node.(
+        NodeType.Theta |
+        Read.id |
+        Import.id | ## Import
+        Body.Region(0).(
+            Node.(
+                Body.Instruction("Br") |
+                Read.Dedge{x}.id |
+                Write.1 |
+                id
+            ) |
+            id
+        ) |
+        Export.id  | ## Export
+        Write.id
+    )
+    -->
+    Node.(
+        NodeType.Theta |
+        Read.id |
+        Import.id | ## Import
+        Body.Region(0).id |
+        Export.(Dedge{x}.Branch | id)  | ## Export
+        Write.id
+    )
+    @[0, 1, 4, 5, 6]
+    ;
+
+
 react rg_gamma_connect_conditional = 
     CtNode.(
         id |
@@ -403,74 +494,8 @@ react rg_gamma_connect_conditional =
     @[0, 3, 4, 5, 6]
     ;
 
-react rg_self_loop = 
-    CtNode.(
-        CtSelfLoop |
-        CtBlock(0).Block.(Import.id | Export.id | Body.Region(0).id)
-    )
-    -->
-    CtNode.(
-        CtSelfLoop |
 
-        CtBlock(0).Block.(Import.1 | Export.1 | Body.Region(0).1) |
-        Node.(
-            NodeType.Theta |
-            Read.id |
-            Import.id | ## Import
-            Body.Region(0).id |
-            Export.id  | ## Export
-            Write.id 
-        )
-    )
-    @[0, 0, 2, 1, 1];
-
-react rg_self_loop_connect_conditional = 
-    Node.(
-        NodeType.Theta |
-        Read.id |
-        Import.id | ## Import
-        Body.Region(0).(
-            Node.(
-                Body.Instruction("Br") |
-                Read.Dedge{x}.id |
-                Write.1 |
-                id
-            ) |
-            id
-        ) |
-        Export.id  | ## Export
-        Write.id
-    )
-    -->
-    Node.(
-        NodeType.Theta |
-        Read.id |
-        Import.id | ## Import
-        Body.Region(0).id |
-        Export.(Dedge{x}.Branch | id)  | ## Export
-        Write.id
-    )
-    @[0, 1, 4, 5, 6]
-    ;
-
-
-react rg_finish_node = 
-    CtNode.(
-        id |
-        CtBlock(0).Block.(
-            Body.Region(0).id |
-            id
-        ) |
-        Node.id
-    ) 
-    -->
-    Block.(
-        Body.Region(0).(
-            id | Node.id
-        )
-        | id
-    )
-    @[1, 3, 2];
+## Rules Finishing the CFG transformation ##
 
 react rg_lone_region_imports = 
     Node.(
@@ -533,7 +558,6 @@ react rg_lone_region_exports =
     ;
 
 
-
 react rg_lone_region_void = 
     Node.(
         NodeType.Lambda |
@@ -586,47 +610,8 @@ react rg_lone_region_return =
     @[0, 1, 2, 4]
     ;
 
-## Connect the Imports and Exports of the new Continuous Block
-react rg_continuous_connect_state = 
-    CtNode.(
-        CtContinuous |
-        CtBlock(1).Block.(
-            Import.(Dedge{x}.State | id) |
-            Export.(Dedge{y}.State | id) |
-            id 
-        ) |
-        CtBlock(2).Block.(
-            Import.(Dedge{w}.State | id) |
-            Export.(Dedge{z}.State | id) |
-            id
-        ) | 
-        Block.(
-            Import.1 |
-            Export.1 |
-            Body.Region(0).id
-        )
-    ) 
-    -->
-    CtNode.(
-        CtContinuous |
-        CtBlock(1).Block.(
-            Import.(Dedge{x}.State | id) |
-            Export.id |
-            id 
-        ) |
-        CtBlock(2).Block.(
-            Import.id |
-            Export.(Dedge{z}.State | id) |
-            id
-        ) | 
-        Block.(
-            Import.1 |
-            Export.1 |
-            Body.Region(0).(id | /u Alias{y,w}.AliasNewName{u})
-        )
-    )
-    ;
 
+## Connect the Imports and Exports of the new Continuous Block ##
 
 react rg_continuous_connect_import_1_to_import_2 =  (
     CtNode.(
@@ -667,8 +652,8 @@ react rg_continuous_connect_import_1_to_import_2 =  (
             Body.Region(0).(id | /u Alias{x,z}.AliasNewName{u})
         )
     )
-
     ;
+
 
 react rg_continuous_connect_export_1_to_import_2 = 
     CtNode.(
@@ -710,8 +695,8 @@ react rg_continuous_connect_export_1_to_import_2 =
             Body.Region(0).(id | /u Alias{x,z}.AliasNewName{u})
         )
     )
-
     ;
+
 
 react rg_continuous_remove_export_1 =
     CtNode.(
@@ -752,6 +737,7 @@ react rg_continuous_remove_export_1 =
         )
     )
     ;
+
 
 react rg_continuous_connect_export_1_to_import_2_remove_export_1 =
     CtNode.(
@@ -795,22 +781,9 @@ react rg_continuous_connect_export_1_to_import_2_remove_export_1 =
     ) 
     ;
 
-## Aliasing fixes
-react aliasing_connect = 
-    Alias{x,y}.AliasNewName{u} || 
-    Dedge{x}.id
-    -->
-    Alias{x,y}.AliasNewName{u} ||
-    Dedge{u}.id
-    ;
 
-react aliasing_finish = /x /y
-    Alias{x,y}.AliasNewName{u}
-    -->
-    1 | {u}
-    ;
+## Remove duplicated dependencies ##
 
-## Add the read and write of the new node
 react rg_deduplicate_read = 
     Node.(
         Read.(Dedge{x}.Loc{y} | Dedge{z}.Loc{y} | id) |
@@ -823,6 +796,7 @@ react rg_deduplicate_read =
         {x} | {z} 
     ) 
     ;
+
 
 react rg_deduplicate_write = 
     Node.(
@@ -837,7 +811,10 @@ react rg_deduplicate_write =
     ) 
     ;
 
-react rg_disconnect_dedge_read = ## Includes State
+
+# Disconnect Read and Write Dedges from Import and Export #
+
+react rg_disconnect_dedge_read = 
     Node.(
         Read.(Dedge{x}.id | id) |
         Import.(Dedge{x}.id | id) |
@@ -851,7 +828,7 @@ react rg_disconnect_dedge_read = ## Includes State
     )
     ;
 
-react rg_disconnect_dedge_write = ## includes State
+react rg_disconnect_dedge_write = 
     Node.(
         Write.(Dedge{x}.id | id) |
         Export.(Dedge{x}.id | id) |
@@ -865,21 +842,8 @@ react rg_disconnect_dedge_write = ## includes State
     )
     ;
 
-react rg_deduplicate_state_read = /x /y
-    Read.(Dedge{x}.State | Dedge{y}.State | id)
-    --> /x
-    Read.(Dedge{x}.State | id)
-    ;
 
-react rg_deduplicate_state_write = /x /y
-    Write.(Dedge{x}.State | Dedge{y}.State | id)
-    --> /x
-    Write.(Dedge{x}.State | id)
-    ;
-    
-    
-## Incorporate the new node into its parent node
-## # Connect the Read and Write of the new node
+## Connect the new Node to its parent Region ##
 
 react rg_connect_node_read_to_export = /z (
     CtBlock(0).Block.(
@@ -914,6 +878,7 @@ react rg_connect_node_read_to_export = /z (
     )
 )
     ;
+
 
 react rg_connect_write_to_export = /z (
     CtBlock(0).Block.(
@@ -976,6 +941,7 @@ react rg_connect_read_to_import = /z (
     )
     ;
 
+
 react rg_add_write_to_export = /z (
     CtBlock(0).Block.(
         Export.id |
@@ -1002,8 +968,8 @@ react rg_add_write_to_export = /z (
         id
     )
 )
-    ## if !{y} in param
     ;
+
 
 react rg_add_read_to_import = /z (
     CtBlock(0).Block.(
@@ -1031,90 +997,11 @@ react rg_add_read_to_import = /z (
         id
     )
 )
-    ## if !{y} in param
     ;
 
-react rg_connect_state = /z /w (
-    CtBlock(0).Block.(
-        Import.(
-            Dedge{x}.State | id
-        ) | 
-        Export.(
-            Dedge{y}.State | id
-        ) | 
-        id
-    ) |
-    Node.(
-        Read.(
-            Dedge{z}.State | id
-        ) | 
-        Write.(
-            Dedge{w}.State | id
-        ) |
-        id
-    )
-)
-    --> /v (
-    CtBlock(0).Block.(
-        Import.(
-            Dedge{x}.State | id
-        ) | 
-        Export.(
-            Dedge{v}.State | id
-        ) | 
-        id
-    ) |
-    Node.(
-        Read.(
-            Dedge{y}.State | id
-        ) | 
-        Write.(
-            Dedge{v}.State | id
-        ) |
-        id
-    )
-)
-    ;
 
-react rg_add_state = (
-    CtBlock(0).Block.(
-        Import.id |
-        Export.id |
-        id
-    ) |
-    Node.(
-        Read.(
-            Dedge{x}.State | id
-        ) |
-        Write.(
-            Dedge{y}.State | id 
-        ) |
-        id
-    )
-)
-    --> /z /w (
-    CtBlock(0).Block.(
-        Import.(
-            Dedge{z}.State | id 
-        ) | 
-        Export.(
-            Dedge{w}.State | id 
-        ) |
-        id 
-    ) |
-    Node.(
-        Read.(
-            Dedge{z}.State | id
-        ) |
-        Write.(
-            Dedge{w}.State | id 
-        ) |
-        id | {x} | {y}
-    )
-)
-    if !State in param;
+## Disconnect created Node Loc from the Region's import/export ##
 
-## Disconnect created node from the import/export
 react rg_disconnect_loc_new_node_start_import = 
     CtBlock(0).Block.(
         Import.(Dedge{m}.Loc{a} | id) |
@@ -1135,6 +1022,7 @@ react rg_disconnect_loc_new_node_start_import =
         id
     )
     ;
+
 
 react rg_disconnect_loc_new_node_start_export = 
     CtBlock(0).Block.(
@@ -1157,6 +1045,7 @@ react rg_disconnect_loc_new_node_start_export =
     )
     ;
 
+
 react rg_disconnect_loc_new_node_iter_r = 
     Node.(
         Read.(Dedge{m}.Loc{a} | id) |
@@ -1170,6 +1059,7 @@ react rg_disconnect_loc_new_node_iter_r =
         id
     )
     ;
+
 
 react rg_disconnect_loc_new_node_iter_i = 
     Node.(
@@ -1185,6 +1075,7 @@ react rg_disconnect_loc_new_node_iter_i =
     )
     ;
 
+
 react rg_disconnect_loc_new_node_iter_e = 
     Node.(
         Export.(Dedge{m}.Loc{a} | id) |
@@ -1198,6 +1089,7 @@ react rg_disconnect_loc_new_node_iter_e =
         id
     )
     ;
+
 
 react rg_disconnect_loc_new_node_iter_w = 
     Write.(
@@ -1213,107 +1105,30 @@ react rg_disconnect_loc_new_node_iter_w =
     )
     ;
 
+
 react rg_disconnect_loc_new_node_fin =
     New{b}.Old{a}
     -->
     1 | {a} | {b}
     ;
 
-react rg_disconnect_loc_new_node = 
-    CtBlock(0).Block.(
-        Import.(Dedge{z}.Loc{y} | id) | 
-        Export.(Dedge{w}.Loc{y} | id) |
-        id
-    ) | 
-    Node.(
-        Read.(Dedge{z}.Loc{y} | id) |
-        Import.(Dedge{a}.Loc{y} | id) |
-        Export.(Dedge{b}.Loc{y} | id) |
-        Write.(Dedge{w}.Loc{y} | id) |
-        id
-    )
-    --> /n (
-        CtBlock(0).Block.(
-        Import.(Dedge{z}.Loc{y} | id) | 
-        Export.(Dedge{w}.Loc{y} | id) |
-        id
-    ) | 
-    Node.(
-        Read.(Dedge{z}.Loc{n} | id) |
-        Import.(Dedge{a}.Loc{n} | id) |
-        Export.(Dedge{b}.Loc{n} | id) |
-        Write.(Dedge{w}.Loc{n} | id) |
-        id
-    )
-)
+
+## ## ## ##
+## Misc. ##
+## ## ## ##
+
+## Aliasing fixes for all rules ##
+react aliasing_connect = 
+    Alias{x,y}.AliasNewName{u} || 
+    Dedge{x}.id
+    -->
+    Alias{x,y}.AliasNewName{u} ||
+    Dedge{u}.id
     ;
 
-react rg_disconnect_loc_new_node_import = 
-    CtBlock(0).Block.(
-        Import.(Dedge{z}.Loc{y} | id) |
-        id
-    ) | 
-    Node.(
-        Read.(Dedge{z}.Loc{y} | id) |
-        Import.(Dedge{a}.Loc{y} | id) |
-        id
-    )
-    --> /n (
-        CtBlock(0).Block.(
-        Import.(Dedge{z}.Loc{y} | id) | 
-        id
-    ) | 
-    Node.(
-        Read.(Dedge{z}.Loc{n} | id) |
-        Import.(Dedge{a}.Loc{n} | id) |
-        id
-    )
-)
+react aliasing_finish = /x /y
+    Alias{x,y}.AliasNewName{u}
+    -->
+    1 | {u}
     ;
-
-react rg_disconnect_loc_new_node_export = 
-    CtBlock(0).Block.(
-        Export.(Dedge{w}.Loc{y} | id) |
-        id
-    ) | 
-    Node.(
-        Export.(Dedge{b}.Loc{y} | id) |
-        Write.(Dedge{w}.Loc{y} | id) |
-        id
-    )
-    --> /n (
-        CtBlock(0).Block.(
-        Export.(Dedge{w}.Loc{y} | id) |
-        id
-    ) | 
-    Node.(
-        Export.(Dedge{b}.Loc{n} | id) |
-        Write.(Dedge{w}.Loc{n} | id) |
-        id
-    )
-)
-    ;
-    
-
-## If an import is directly exported, then it is not changed
-## react rg_disconnect_unchanged_imports = 
-##     Node.(
-##         Read.(Dedge{x}.Loc{a} | id)
-##         Import.(Dedge{y}.Loc{a} | id) |
-##         Export.(Dedge{y}.Loc{a} | id) |
-##         Write.(Dedge{z}.Loc{a} | id) |
-##         id
-##     )
-##     -->
-##     Node.(
-##         Alias{x,z}.AliasNewName{u} |
-##         Read.(Dedge{u}.Loc{a} | id)
-##         Import.(Dedge{y}.Loc{a} | id) |
-##         Export.id |
-##         Write.id |
-##         id
-##     )
-##     ;
-
-
 
