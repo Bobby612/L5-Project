@@ -276,7 +276,7 @@ fun react opt_node_pushout_2_gamma_2_comm(s) =
     @[3, 4, 5, 6, 0, 1, 2, 7, 12, 13]
     ;
 
-fun react opt_node_pushout_2_gamma_3_non_comm(s,i,j) = 
+fun react opt_node_pushout_2_gamma_3_non_comm(inst,i) = 
     Node.(
         NodeType.Gamma |
         Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) | #0
@@ -285,12 +285,12 @@ fun react opt_node_pushout_2_gamma_3_non_comm(s,i,j) =
         Body.(
             Region(1).(
                 Node.(
-                    Body.Instruction(s) |
+                    Body.Instruction(inst) |
                     Read.(Dedge{q}.Loc{t1} | Dedge{r}.Loc{t2} | Dedge{s}.id) | #3
                     Write.Dedge{t}.id | #4
                     Extra.(
                         DataTypes.(
-                            Loc1{t1}.DataType(i,1) | Loc1{t2}.DataType(j,2) | id #5
+                            Loc1{t1}.DataType(1,i) | id #5
                         ) | id #6
                     ) |
                     id #7
@@ -299,12 +299,12 @@ fun react opt_node_pushout_2_gamma_3_non_comm(s,i,j) =
             ) |
             Region(2).(
                 Node.(
-                    Body.Instruction(s) | 
+                    Body.Instruction(inst) | 
                     Read.(Dedge{x}.Loc{s1} | Dedge{y}.Loc{s2} | Dedge{z}.id) | #9
                     Write.Dedge{w}.id | #10
                     Extra.(
                         DataTypes.(
-                            Loc1{s1}.DataType(i,1) | Loc1{s2}.DataType(j,2) | id #11
+                            Loc1{s1}.DataType(1,i) | id #11
                         ) | id #12
                     ) |
                     id #13
@@ -317,12 +317,12 @@ fun react opt_node_pushout_2_gamma_3_non_comm(s,i,j) =
     --> 
     /p (
     Node.(
-        Body.Instruction(s) |
+        Body.Instruction(inst) |
         Read.(Dedge{m}.Loc{t1} | Dedge{n}.Loc{t2} | Dedge{o}.id) | #3
         Write.Dedge{p}.id | #4
         Extra.(
             DataTypes.(
-                Loc1{t1}.DataType(i,1) | Loc1{t2}.DataType(j,2) | id #5
+                Loc1{t1}.DataType(i,1) | id #5
             ) | id #6
         ) |
         id #7
@@ -911,22 +911,39 @@ react opt_fix_unfinished_ivr =  ## Used in IVR
     ;
 
 
-react opt_fix_remove_unused_read = ## Used in IVR 
+react opt_fix_remove_unused_read_th = ## Used in NPO 
     /a 
     Node.(
         Read.(Dedge{x}.Loc{a} | id) |
+        NodeType.Theta |
         id
     )
     -->
     {x} |
     Node.(
         Read.id |
+        NodeType.Theta |
         id
     )
-    if !Simple in param
     ;
 
-react opt_fix_remove_unused_write = ## Used in IVR 
+react opt_fix_remove_unused_read_g = ## Used in NPO 
+    /a 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        NodeType.Gamma |
+        id
+    )
+    -->
+    {x} |
+    Node.(
+        Read.id |
+        NodeType.Gamma |
+        id
+    )
+    ;
+
+react opt_fix_remove_unused_write = ## Used in NPO ?
     /a 
     Node.(
         Write.(Dedge{x}.Loc{a} | id) |
@@ -938,7 +955,7 @@ react opt_fix_remove_unused_write = ## Used in IVR
         Write.id |
         id
     )
-    if !Simple in param
+    if !Simple in param ## This condition does not work!
     ;
 
 
@@ -956,19 +973,18 @@ react opt_fix_consolidate_read =
     ;
 
 
-react opt_fix_remove_unused_import = /y /a ## Used for Node Push Out
+react opt_fix_remove_unused_import = /y ## Used for Node Push Out
     Node.(
-        Read.(Dedge{x}.Loc{a} | id) |
         Import.(Dedge{y}.Loc{a} | id) |
         id
     )
     -->
     Node.(
-        Read.id |
         Import.id |
         id
-    ) | {x}
+    ) | {a}
     ;
+
 
 fun react opt_fix_gamma_read(i) =  ## Used in Node Pull-in
     Node.(
