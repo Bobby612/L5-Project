@@ -1092,14 +1092,14 @@ react rg_disconnect_loc_new_node_iter_e =
 
 
 react rg_disconnect_loc_new_node_iter_w = 
-    Write.(
-        Read.(Dedge{m}.Loc{a} | id) |
+    Node.(
+        Write.(Dedge{m}.Loc{a} | id) |
         New{b}.Old{a} |
         id
     )
     -->
-    Write.(
-        Read.(Dedge{m}.Loc{b} | id) |
+    Node.(
+        Write.(Dedge{m}.Loc{b} | id) |
         New{b}.Old{a} |
         id
     )
