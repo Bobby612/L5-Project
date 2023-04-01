@@ -15,6 +15,7 @@ Pass the name of a valid {filename}.ll LLVM assembly file as a command line argu
 
 ## Known issues
 * The way types are recorded is sub-optimal -- would be good to split type and dependency order.
+    * Currently, dependency order is first, type is second
 * Alignment is not recorded at many places
 * Do something more reasonable with unsupported instructions. Currently, they are just printed out and ignored.
 
