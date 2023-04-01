@@ -6,3 +6,4 @@ control_flow_bigraph.big
 LLtoBig3/*.ll 
 LLtoBig3/*.big 
 optimisation.big 
+__pycache__/*
