@@ -1,4 +1,4 @@
-from llvm_to_bigrapher import strings_dict,constant_blocks
+import global_vars
 
 """
 
@@ -39,25 +39,23 @@ def create_address(number_string, order=0):
                 return_string += "nine"
         return f"Dedge{{{return_string}}}.Loc{{adr_{order}}}", " /" + return_string
 
-    if number_string in strings_dict:
-        type_no = strings_dict[number_string]
+    if number_string in global_vars.strings_dict:
+        type_no = global_vars.strings_dict[number_string]
     else:
-        type_no = len(strings_dict)
-        strings_dict[number_string] = type_no
-
-    global constant_blocks
+        type_no = len(global_vars.strings_dict)
+        global_vars.strings_dict[number_string] = type_no
     
-    dedge = f"Dedge{{constant_{len(constant_blocks)}}}.Loc{{adr_{order}}}"
-    closure = f" /constant_{len(constant_blocks)}"
+    dedge = f"Dedge{{constant_{len(global_vars.constant_blocks)}}}.Loc{{adr_{order}}}"
+    closure = f" /constant_{len(global_vars.constant_blocks)}"
 
-    constant_blocks += [
+    global_vars.constant_blocks += [
 f"""
 /adr_0
 Node.(
     NodeType.Simple |
     Body.Literal |
     Read.1 |
-    Write.Dedge{{constant_{len(constant_blocks)}}}.Loc{{adr_0}} |
+    Write.Dedge{{constant_{len(global_vars.constant_blocks)}}}.Loc{{adr_0}} |
     Extra.DataTypes.(Loc1{{adr_0}}.DataType(0,-1) | Loc1{{adr_0}}.Const({type_no}) )
 )
 """
@@ -69,11 +67,11 @@ Node.(
 def transform_type(type_string, type_order=0):
     if type(type_string) != str:
         type_string = str(type_string)
-    if type_string in strings_dict:
-        type_no = strings_dict[type_string]
+    if type_string in global_vars.strings_dict:
+        type_no = global_vars.strings_dict[type_string]
     else:
-        type_no = len(strings_dict)
-        strings_dict[type_string] = type_no
+        type_no = len(global_vars.strings_dict)
+        global_vars.strings_dict[type_string] = type_no
 
     if type(type_order) == str:
         return f"Loc1{{adr_{type_order}}}.DataType(-1,{type_no})"
@@ -84,11 +82,11 @@ def transform_option(option_string):
     if type(option_string) != str:
         option_string = str(option_string)
 
-    if option_string in strings_dict:
-        type_no = strings_dict[option_string]
+    if option_string in global_vars.strings_dict:
+        type_no = global_vars.strings_dict[option_string]
     else:
-        type_no = len(strings_dict)
-        strings_dict[option_string] = type_no
+        type_no = len(global_vars.strings_dict)
+        global_vars.strings_dict[option_string] = type_no
     
     return f"Option({type_no})"
 
@@ -107,11 +105,11 @@ def transform_alignment(alignment_string):
     if type(alignment_string) != str:
         alignment_string = str(alignment_string)
         
-    if alignment_string in strings_dict:
-        type_no = strings_dict[alignment_string]
+    if alignment_string in global_vars.strings_dict:
+        type_no = global_vars.strings_dict[alignment_string]
     else:
-        type_no = len(strings_dict)
-        strings_dict[alignment_string] = type_no
+        type_no = len(global_vars.strings_dict)
+        global_vars.strings_dict[alignment_string] = type_no
     
     return f"Alignment({type_no})"
 
@@ -128,11 +126,11 @@ def transform_type3(i):
     type_string = i[1]
     if type(type_string) != str:
         type_string = str(type_string)
-    if type_string in strings_dict:
-        type_no = strings_dict[type_string]
+    if type_string in global_vars.strings_dict:
+        type_no = global_vars.strings_dict[type_string]
     else:
-        type_no = len(strings_dict)
-        strings_dict[type_string] = type_no
+        type_no = len(global_vars.strings_dict)
+        global_vars.strings_dict[type_string] = type_no
     return f"Loc1{{olabel_{i[0]}}}.DataType({i[0]},{type_no})"
 
 def create_label3(label):

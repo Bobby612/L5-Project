@@ -20,7 +20,10 @@ Pass the name of a valid {filename}.ll LLVM assembly file as a command line argu
 
 ## Files
 ### LLVM to Bigrapher
-The main file, with functions creating the different nodes.
+The main file
+
+### Parse Structure
+File containing the functions emitting the different LLVM structures -- global variables, functions, blocks, instructions
 
 ### Parse Instructions
 Each method takes an instruction and any additional needed arguments (like state).
@@ -39,3 +42,6 @@ call; sext; getelementptr; alloca; bitcast; sitofp; ret; icmp; br; load; store; 
 
 ### Utils
 Miscellaneous utilities
+
+### Global Variables
+The global variables for the project, in a separate file to avoid circular imports

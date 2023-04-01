@@ -1,7 +1,7 @@
 from llvmlite.binding.value import ValueRef
 
 from utils import *
-from llvm_to_bigrapher import strings_dict
+import global_vars
 
 """
 
@@ -87,11 +87,11 @@ def translate_instruction_call_complex(instruction:ValueRef, name:str, state_dic
                 if i[-1] == ")" or i[-2:] == "),":
 
                     current_string = gep_expr + i
-                    if current_string in strings_dict:
-                        type_no = strings_dict[current_string]
+                    if current_string in global_vars.strings_dict:
+                        type_no = global_vars.strings_dict[current_string]
                     else:
-                        type_no = len(strings_dict)
-                        strings_dict[current_string] = type_no
+                        type_no = len(global_vars.strings_dict)
+                        global_vars.strings_dict[current_string] = type_no
 
                     gep = False
                     instruction_info["read"] += [ f'Loc1{{adr_{j-1}}}.Const({type_no})' ]
@@ -182,7 +182,7 @@ def translate_instruction_instr_to(instruction):
     part1 = instruction.split()
     part1 = part1[:3] + [" ".join(part1[3:-1])] + part1[-1:]
     instruction = part1 + part2
-    # print(instruction)
+    
     instruction_info = {}
     instruction_info["opcode"] = instruction[2].capitalize()
     closures = []
@@ -295,7 +295,7 @@ def translate_instruction_store(instruction1:ValueRef, state, state_dict:dict[st
     part2 = [" ".join(part2[0:-1])] + part2[-1:]
 
     instruction = part1 + part2 + [instruction[-1]]
-    # print(instruction)
+
     instruction_info = {}
     instruction_info["opcode"] = "Store"
     closures = []
@@ -303,7 +303,7 @@ def translate_instruction_store(instruction1:ValueRef, state, state_dict:dict[st
     closures += [closure]
     
     write_addres, closure = create_address(instruction[-2], 2)
-    # print(closure)
+    
     if closure in state_dict:
         in_state = f"Dedge{{{state_dict[closure]}}}.Loc{{adr_s}}"
         closures += [ " /" + state_dict[closure] ]
