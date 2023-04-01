@@ -62,8 +62,10 @@ atomic ctrl Branch = 0;
 ctrl Alias = 2;
 atomic ctrl AliasNewName = 1;
 ctrl New = 1;
-atomic ctrl Old = 1;
+ctrl Old = 1;
 atomic fun ctrl ID(i) = 0;
+atomic ctrl I = 0;
+atomic ctrl E = 0;
 
 ## Extras
 atomic fun ctrl DataType(i,j) = 0;

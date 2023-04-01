@@ -1018,7 +1018,7 @@ react rg_disconnect_loc_new_node_start_import =
     ) | /b
     Node.(
         Read.(Dedge{m}.Loc{b} | id ) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.I |
         id
     )
     ;
@@ -1040,7 +1040,7 @@ react rg_disconnect_loc_new_node_start_export =
     ) | /b
     Node.(
         Write.(Dedge{m}.Loc{b} | id ) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.E |
         id
     )
     ;
@@ -1049,13 +1049,13 @@ react rg_disconnect_loc_new_node_start_export =
 react rg_disconnect_loc_new_node_iter_r = 
     Node.(
         Read.(Dedge{m}.Loc{a} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.I |
         id
     )
     -->
     Node.(
         Read.(Dedge{m}.Loc{b} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.I |
         id
     )
     ;
@@ -1064,13 +1064,13 @@ react rg_disconnect_loc_new_node_iter_r =
 react rg_disconnect_loc_new_node_iter_i = 
     Node.(
         Import.(Dedge{m}.Loc{a} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.I |
         id
     )
     -->
     Node.(
         Import.(Dedge{m}.Loc{b} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.I |
         id
     )
     ;
@@ -1079,13 +1079,13 @@ react rg_disconnect_loc_new_node_iter_i =
 react rg_disconnect_loc_new_node_iter_e = 
     Node.(
         Export.(Dedge{m}.Loc{a} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.E |
         id
     )
     -->
     Node.(
         Export.(Dedge{m}.Loc{b} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.E |
         id
     )
     ;
@@ -1094,22 +1094,23 @@ react rg_disconnect_loc_new_node_iter_e =
 react rg_disconnect_loc_new_node_iter_w = 
     Node.(
         Write.(Dedge{m}.Loc{a} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.E |
         id
     )
     -->
     Node.(
         Write.(Dedge{m}.Loc{b} | id) |
-        New{b}.Old{a} |
+        New{b}.Old{a}.E |
         id
     )
     ;
 
 
 react rg_disconnect_loc_new_node_fin =
-    New{b}.Old{a}
+    New{b}.Old{a}.id
     -->
     1 | {a} | {b}
+    @[]
     ;
 
 
