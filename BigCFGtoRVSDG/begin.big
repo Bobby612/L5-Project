@@ -44,8 +44,8 @@ begin brs
                 rg_disconnect_loc_new_node_iter_i,
                 rg_disconnect_loc_new_node_iter_w),
                 (rg_disconnect_loc_new_node_fin),
-                (rg_disconnect_loc_new_node_start_import),
-                (rg_disconnect_loc_new_node_start_export),
+                {rg_disconnect_loc_new_node_start_import},
+                {rg_disconnect_loc_new_node_start_export},
 
                 # Connect the new Node's conditional #
                 (rg_gamma_connect_conditional),
