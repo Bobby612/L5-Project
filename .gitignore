@@ -8,3 +8,6 @@ LLtoBig3/*.big
 optimisation.big 
 *.pyc
 *.pyo
+*.c
+*.cpp
+Count Identifiers/*.big
