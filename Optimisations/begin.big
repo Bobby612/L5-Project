@@ -7,7 +7,7 @@ begin brs
     int i = {0, 1, 2};
     int j = {1, 2};
     int opts = {0, 1, 2, 3, 4, 5};
-    string s_instr_2_com = {"Add", "Mul", "Load"};
+    string s_instr_2_com = {"Add", "Mul", "Load", "Fadd", "Fmul"};
     ## string s_instr_1 = {"Load", }
     init cfg;
     rules = [   
