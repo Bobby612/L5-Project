@@ -1001,14 +1001,130 @@ react rg_add_read_to_import = /z (
 
 
 ## Disconnect created Node Loc from the Region's import/export ##
-
-react rg_disconnect_loc_new_node_start_import = 
+react rg_disconnect_loc_new_th_start_import = 
     CtBlock(0).Block.(
         Import.(Dedge{m}.Loc{a} | id) |
         id
     ) |
     Node.(
         Read.(Dedge{m}.Loc{a} | id ) |
+        NodeType.Theta |
+        id
+    )
+    -->
+    CtBlock(0).Block.(
+        Import.(Dedge{m}.Loc{a} | id) |
+        id
+    ) | /b
+    Node.(
+        Read.(Dedge{m}.Loc{b} | id ) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    ;
+
+
+react rg_disconnect_loc_new_th_start_export = 
+    CtBlock(0).Block.(
+        Export.(Dedge{m}.Loc{a} | id) |
+        id
+    ) |
+    Node.(
+        Write.(Dedge{m}.Loc{a} | id ) |
+        NodeType.Theta |
+        id  
+    )
+    -->
+    CtBlock(0).Block.(
+        Export.(Dedge{m}.Loc{a} | id) |
+        id
+    ) | /b
+    Node.(
+        Write.(Dedge{m}.Loc{b} | id ) |
+        NodeType.Theta |
+        New{b}.Old{a}.1 |
+        id
+    )
+    ;
+
+
+react rg_disconnect_loc_new_th_iter_r = 
+    Node.(
+        Read.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    -->
+    Node.(
+        Read.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    ;
+
+
+react rg_disconnect_loc_new_th_iter_i = 
+    Node.(
+        Import.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    -->
+    Node.(
+        Import.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    ;
+
+
+react rg_disconnect_loc_new_th_iter_e = 
+    Node.(
+        Export.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    -->
+    Node.(
+        Export.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    ;
+
+
+react rg_disconnect_loc_new_th_iter_w = 
+    Node.(
+        Write.(Dedge{m}.Loc{a} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    -->
+    Node.(
+        Write.(Dedge{m}.Loc{b} | id) |
+        New{b}.Old{a}.1 |
+        NodeType.Theta |
+        id
+    )
+    ;
+
+
+react rg_disconnect_loc_new_g_start_import = 
+    CtBlock(0).Block.(
+        Import.(Dedge{m}.Loc{a} | id) |
+        id
+    ) |
+    Node.(
+        Read.(Dedge{m}.Loc{a} | id ) |
+        NodeType.Gamma |
         id
     )
     -->
@@ -1019,18 +1135,20 @@ react rg_disconnect_loc_new_node_start_import =
     Node.(
         Read.(Dedge{m}.Loc{b} | id ) |
         New{b}.Old{a}.I |
+        NodeType.Gamma |
         id
     )
     ;
 
 
-react rg_disconnect_loc_new_node_start_export = 
+react rg_disconnect_loc_new_g_start_export = 
     CtBlock(0).Block.(
         Export.(Dedge{m}.Loc{a} | id) |
         id
     ) |
     Node.(
         Write.(Dedge{m}.Loc{a} | id ) |
+        NodeType.Gamma |
         id  
     )
     -->
@@ -1040,66 +1158,75 @@ react rg_disconnect_loc_new_node_start_export =
     ) | /b
     Node.(
         Write.(Dedge{m}.Loc{b} | id ) |
+        NodeType.Gamma |
         New{b}.Old{a}.E |
         id
     )
     ;
 
 
-react rg_disconnect_loc_new_node_iter_r = 
+react rg_disconnect_loc_new_g_iter_r = 
     Node.(
         Read.(Dedge{m}.Loc{a} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.I |
         id
     )
     -->
     Node.(
         Read.(Dedge{m}.Loc{b} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.I |
         id
     )
     ;
 
 
-react rg_disconnect_loc_new_node_iter_i = 
+react rg_disconnect_loc_new_g_iter_i = 
     Node.(
         Import.(Dedge{m}.Loc{a} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.I |
         id
     )
     -->
     Node.(
         Import.(Dedge{m}.Loc{b} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.I |
         id
     )
     ;
 
 
-react rg_disconnect_loc_new_node_iter_e = 
+react rg_disconnect_loc_new_g_iter_e = 
     Node.(
         Export.(Dedge{m}.Loc{a} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.E |
         id
     )
     -->
     Node.(
         Export.(Dedge{m}.Loc{b} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.E |
         id
     )
     ;
 
 
-react rg_disconnect_loc_new_node_iter_w = 
+react rg_disconnect_loc_new_g_iter_w = 
     Node.(
         Write.(Dedge{m}.Loc{a} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.E |
         id
     )
     -->
     Node.(
         Write.(Dedge{m}.Loc{b} | id) |
+        NodeType.Gamma |
         New{b}.Old{a}.E |
         id
     )

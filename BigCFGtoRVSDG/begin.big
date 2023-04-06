@@ -39,13 +39,17 @@ begin brs
                 (rg_add_write_to_export, rg_add_read_to_import), 
 
                 # Reconnect the loc nodes in the correct fashion #
-                (rg_disconnect_loc_new_node_iter_r,
-                rg_disconnect_loc_new_node_iter_e,
-                rg_disconnect_loc_new_node_iter_i,
-                rg_disconnect_loc_new_node_iter_w),
+                (rg_disconnect_loc_new_th_iter_r,
+                rg_disconnect_loc_new_th_iter_e,
+                rg_disconnect_loc_new_th_iter_i,
+                rg_disconnect_loc_new_th_iter_w,
+                rg_disconnect_loc_new_g_iter_r,
+                rg_disconnect_loc_new_g_iter_e,
+                rg_disconnect_loc_new_g_iter_i,
+                rg_disconnect_loc_new_g_iter_w),
                 (rg_disconnect_loc_new_node_fin),
-                (rg_disconnect_loc_new_node_start_import),
-                (rg_disconnect_loc_new_node_start_export),
+                (rg_disconnect_loc_new_th_start_import, rg_disconnect_loc_new_g_start_import),
+                (rg_disconnect_loc_new_th_start_export, rg_disconnect_loc_new_g_start_export),
 
                 # Connect the new Node's conditional #
                 (rg_gamma_connect_conditional),

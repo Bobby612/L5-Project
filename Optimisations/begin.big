@@ -25,7 +25,7 @@ begin brs
                 ## {opt_fix_move_branch(j)},
                 ## {opt_fix_gamma_theta_final},
 
-                {opt_fix_finish_ivr},
+                {opt_fix_finish_ivr_con, opt_fix_finish_ivr_dis},
                 (opt_fix_finish_ivr_read, opt_fix_finish_ivr_write),
                 (opt_fix_unfinished_ivr),
 

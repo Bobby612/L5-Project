@@ -824,7 +824,7 @@ react opt_fix_disconnect_edges_in_regions_fin =
 
 ## Fix Rules for the implemented optimisations ##
 
-react opt_fix_finish_ivr = /a /b ( ## Used in IVR 
+react opt_fix_finish_ivr_dis = /a /b ( ## Used in IVR 
     IvrMaybe{a,b} |
     Node.(
         Read.(Dedge{x}.Loc{a} | id) |
@@ -836,6 +836,28 @@ react opt_fix_finish_ivr = /a /b ( ## Used in IVR
 )
     --> /u (
     Alias{x,z}.AliasNewName{u} |
+    Node.(
+        Read.id |
+        Import.id |
+        Export.id |
+        Write.id |
+        id
+    )
+)
+    ;
+
+react opt_fix_finish_ivr_con = /a ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{a} | id) |
+        id
+    )
+)
+    --> /u (
+    Alias{x,z}.AliasNewName{u} | {b} |
     Node.(
         Read.id |
         Import.id |
@@ -943,20 +965,20 @@ react opt_fix_remove_unused_read_g = ## Used in NPO
     )
     ;
 
-react opt_fix_remove_unused_write = ## Used in NPO ?
-    /a 
-    Node.(
-        Write.(Dedge{x}.Loc{a} | id) |
-        id
-    )
-    -->
-    {x} |
-    Node.(
-        Write.id |
-        id
-    )
-    if !Simple in param ## This condition does not work!
-    ;
+## react opt_fix_remove_unused_write = ## Used in NPO ?
+##     /a 
+##     Node.(
+##         Write.(Dedge{x}.Loc{a} | id) |
+##         id
+##     )
+##     -->
+##     {x} |
+##     Node.(
+##         Write.id |
+##         id
+##     )
+##     if !Simple in param ## This condition does not work!
+##     ;
 
 
 react opt_fix_consolidate_read = 
