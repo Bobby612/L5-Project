@@ -1,0 +1,1254 @@
+###
+# Author: Borislav Kratchanov
+# Copyright:
+###
+
+## RVSD Node Info
+ctrl Node = 0;
+ctrl NodeType = 0;
+ctrl Read = 0;
+ctrl Import = 0;
+ctrl Body = 0;
+ctrl Export = 0;
+ctrl Write = 0;
+
+ctrl Extra = 0;
+ctrl DataTypes = 0;
+ctrl Options = 0;
+
+## RVSDG Node Types
+ctrl Omega = 0;
+atomic ctrl Lambda = 0;
+atomic ctrl Delta = 0;
+atomic ctrl Gamma = 0;
+atomic ctrl Theta = 0;
+
+## Additional
+atomic ctrl GammaThetaIntermediate = 0;
+ctrl New = 1;
+atomic ctrl Old = 1;
+atomic ctrl IvrMaybe = 2;
+
+atomic ctrl Simple = 0;
+ctrl Multiplex = 0;
+
+## RVSDG Node Body Types (Region and Simple Nodes)
+fun ctrl Region(i) = 0;
+
+atomic ctrl Add = 0;
+atomic ctrl Sub = 0;
+atomic ctrl Mul = 0;
+atomic ctrl Shl = 0; 
+atomic ctrl Srem = 0;
+atomic ctrl Urem = 0;
+atomic ctrl Load = 0;
+atomic ctrl Store = 0;
+atomic ctrl Br = 0;
+atomic ctrl Call = 0;
+atomic ctrl Icmp = 0;
+atomic ctrl Ret = 0;
+atomic ctrl Bitcast = 0;
+atomic ctrl Alloca = 0;
+atomic ctrl Getelementptr = 0;
+atomic ctrl Sext = 0;
+atomic ctrl Literal = 0;
+atomic fun ctrl Instruction(s) = 0;
+
+## Address Controls
+ctrl Dedge = 1;
+## atomic fun ctrl Adr(i) = 0;
+## atomic fun ctrl Label(i) = 0;
+atomic ctrl Loc = 1;
+ctrl Loc1 = 1;
+atomic fun ctrl Const(i) = 0;
+atomic ctrl State = 0;
+atomic ctrl Branch = 0;
+
+## Aliasing implementation
+ctrl Alias = 2;
+atomic ctrl AliasNewName = 1;
+atomic fun ctrl ID(i) = 0;
+
+## Extras
+atomic fun ctrl DataType(i,j) = 0;
+atomic fun ctrl Option(i) = 0;
+atomic fun ctrl Alignment(i) = 0;
+
+## CFG Controls
+ctrl Block = 0;
+atomic ctrl BlockEntry = 1;
+atomic ctrl BlockExit = 1;
+atomic fun ctrl BlockExit_ord(i) = 1;
+ctrl Interface = 0;
+
+## Control Tree Controls
+ctrl Ct = 0;
+atomic ctrl CtAbstract = 1;
+ctrl CtNode = 0;
+
+fun ctrl CtBlock(i) = 0;
+
+atomic ctrl CtContinuous = 0;
+atomic ctrl CtIfThenElse = 0;
+atomic ctrl CtSelfLoop = 0;
+atomic ctrl CtIfThen = 0;
+atomic ctrl CtWhileLoop = 0;
+atomic ctrl CtTopNode = 0;
+
+
+big cfg = 1;
+
+###
+# Author: Borislav Kratchanov
+# Copyright:
+#
+# Optimisations expressed as graph rewriting rules
+#
+###
+
+
+## ## ## ## ## ## ## ## ## ##
+## Common Node Elimination ##
+## ## ## ## ## ## ## ## ## ##
+
+fun react opt_common_node_elimination_2_comm(s) = 
+    Node.(
+        NodeType.Simple | 
+        Body.Instruction(s) |
+        Read.(Dedge{x}.id | Dedge{y}.id) |
+        Write.Dedge{z}.id |
+        id
+    ) | 
+    Node.(
+        NodeType.Simple |
+        Body.Instruction(s) |
+        Read.(Dedge{x}.id | Dedge{y}.id) |
+        Write.Dedge{w}.id |
+        id
+    ) 
+    --> /u
+    Node.(
+        NodeType.Simple |
+        Body.Instruction(s) |
+        Read.(Dedge{x}.id | Dedge{y}.id) |
+        Write.Dedge{u}.id |
+        Alias{z,w}.AliasNewName{u} |
+        id
+    ) 
+    @[0, 1, 2, 3];
+
+fun react opt_common_node_eimination_const(t,c) = ## NB: Datatypes for constants are currently not implemented
+    /a
+    Node.(
+        NodeType.Simple |
+        Body.Literal |
+        Read.1 |
+        Write.Dedge{x}.Loc{a} |
+        Extra.DataTypes.(Loc1{a}.DataType(0,t) | Loc1{a}.Const(c) )
+    ) | /b
+    Node.(
+        NodeType.Simple |
+        Body.Literal |
+        Read.1 |
+        Write.Dedge{y}.Loc{b} |
+        Extra.DataTypes.(Loc1{a}.DataType(0,t) | Loc1{a}.Const(c) )
+    )
+    -->
+    /a
+    Node.(
+        NodeType.Simple |
+        Body.Literal |
+        Read.1 |
+        Write.Dedge{u}.Loc{a} |
+        Extra.DataTypes.(Loc1{a}.DataType(0,t) | Loc1{a}.Const(c) )
+    ) |
+    Alias{x,y}.AliasNewName{u}
+    ;
+
+## ## ## ## ## ## ## ## ## ##
+## Node Pull In  --  Gamma ##
+## ## ## ## ## ## ## ## ## ##
+fun react opt_node_pull_in(i) = /x /b (
+    Node.(
+        Read.id |
+        Write.Dedge{x}.id |
+        id
+    ) |
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{x}.Loc{b} | id) | 
+        Import.(ID(i) | Dedge{y}.Loc{b} | id) |
+        Body.(
+            Region(i).(
+                ## Node.(
+                ##     Read.(Dedge{y}.id | id) |
+                ##     id
+                ## ) |
+                id
+            ) |
+            id
+        ) | 
+        id
+    )
+)
+    --> 
+    Node.(
+        NodeType.Gamma |
+        Read.(id | id) | 
+        Import.(ID(i) | id | id) |
+        Body.(
+            Region(i).(
+                Node.(
+                    Read.id |
+                    Write.Dedge{y}.id | 
+                    id
+                ) |
+                ## Node.(
+                ##     Read.(Dedge{y}.id | id) |
+                ##     id
+                ## ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    @[0, 3, 0, 4, 0, 1, 2, 5, 6, 7  ]
+    ;
+
+
+## ## ## ## ## ## ## ## ## ## ## ##
+## Node Push Out  --  Theta Node ##
+## ## ## ## ## ## ## ## ## ## ## ##
+
+react opt_node_pushout_theta_2_read = /a /b
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) | 
+        Body.Region(0).(
+            Node.(
+                Read.(Dedge{x}.id | Dedge{y}.id) |
+                Write.Dedge{z}.id |
+                id
+            ) | 
+            id
+        ) |
+        id
+    )
+    --> /o (
+    Node.(
+        Read.(Dedge{m}.id | Dedge{n}.id) |
+        Write.Dedge{o}.id |
+        id
+    ) | /c /a /b
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | id ) | 
+        Body.Region(0).id |
+        id
+    )
+)
+    @[2, 3, 4, 5, 0, 1, 6, 7]
+    ;
+
+react opt_node_pushout_theta_1_read = /a
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | id) |
+        Import.(Dedge{x}.Loc{a} | id) | 
+        Body.Region(0).(
+            Node.(
+                Read.Dedge{x}.id |
+                Write.Dedge{z}.id |
+                id
+            ) | 
+            id
+        ) |
+        id
+    )
+    --> /o (
+    Node.(
+        Read.Dedge{m}.id|
+        Write.Dedge{o}.id |
+        id
+    ) | /c /a
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{z}.Loc{c} | id ) | 
+        Body.Region(0).id |
+        id
+    )
+)
+    @[2, 3, 4, 0, 1, 5, 6]
+    ;
+    
+
+react opt_node_pushout_theta_store = /a /b  ## Store is idempotent, so doing it once or doing it multiple times is the same if the arguments are the same
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | id) | 
+        Body.Region(0).(
+            Node.(
+                Body.Instruction("Store") |
+                Read.(Dedge{x}.id | Dedge{y}.id | Dedge{z}.Loc{d}) |
+                Extra.(DataTypes.(Loc1{d}.State | id) | id )|
+                Write.Dedge{w}.Loc{d} |
+                id
+            ) | 
+            id
+        ) |
+        id
+    )
+    --> /p (
+    Node.(
+        Body.Instruction("Store") |
+        Read.(Dedge{m}.id | Dedge{n}.id | Dedge{o}.Loc{d}) |
+        Extra.(DataTypes.(Loc1{d}.State | id) | id )|
+        Write.Dedge{p}.Loc{d} |
+        id
+    ) | /a /b /e
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | Dedge{p}.Loc{e} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | Dedge{w}.Loc{e} | id) | 
+        Body.Region(0).id |
+        id
+    )
+)
+    @[2, 3, 4, 5, 6, 0, 1, 7, 8]
+    ;
+
+## ## ## ## ## ## ## ## ## ## ## ##
+## Node Push Out  --  Gamma Node ##
+## ## ## ## ## ## ## ## ## ## ## ##
+fun react opt_node_pushout_2_gamma_2_comm(s) = 
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | id) |
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) |
+        Body.(
+            Region(1).(
+                Node.(
+                    Body.Instruction(s) |
+                    Read.(Dedge{q}.id | Dedge{r}.id) |
+                    Write.Dedge{t}.id |
+                    id
+                ) | 
+                id
+            ) |
+            Region(2).(
+                Node.(
+                    Body.Instruction(s) | 
+                    Read.(Dedge{x}.id | Dedge{y}.id) |
+                    Write.Dedge{z}.id |
+                    id
+                ) |
+                id
+            )
+        ) |
+        id
+    )
+    --> 
+    /p (
+    Node.(
+        Body.Instruction(s) |
+        Read.(Dedge{m}.id | Dedge{n}.id) |
+        Write.Dedge{p}.id |
+        id
+    ) | /d
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{p}.Loc{d} | id) |
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | Dedge{t}.Loc{d} | id) |
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{d} |id) |
+        Body.(
+            Region(1).id |
+            Region(2).id
+        ) |
+        id
+    )
+)
+    @[3, 4, 5, 6, 0, 1, 2, 7, 12, 13]
+    ;
+
+fun react opt_node_pushout_2_gamma_3_non_comm(inst,i) = 
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | id) | #0
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | Dedge{s}.Loc{c} | id) | #1
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | id) | #2
+        Body.(
+            Region(1).(
+                Node.(
+                    Body.Instruction(inst) |
+                    Read.(Dedge{q}.Loc{t1} | Dedge{r}.Loc{t2} | Dedge{s}.id) | #3
+                    Write.Dedge{t}.id | #4
+                    Extra.(
+                        DataTypes.(
+                            Loc1{t1}.DataType(1,i) | id #5
+                        ) | id #6
+                    ) |
+                    id #7
+                ) | 
+                id #8
+            ) |
+            Region(2).(
+                Node.(
+                    Body.Instruction(inst) | 
+                    Read.(Dedge{x}.Loc{s1} | Dedge{y}.Loc{s2} | Dedge{z}.id) | #9
+                    Write.Dedge{w}.id | #10
+                    Extra.(
+                        DataTypes.(
+                            Loc1{s1}.DataType(1,i) | id #11
+                        ) | id #12
+                    ) |
+                    id #13
+                ) |
+                id #14
+            )
+        ) |
+        id #15
+    )
+    --> 
+    /p (
+    Node.(
+        Body.Instruction(inst) |
+        Read.(Dedge{m}.Loc{t1} | Dedge{n}.Loc{t2} | Dedge{o}.id) | #3
+        Write.Dedge{p}.id | #4
+        Extra.(
+            DataTypes.(
+                Loc1{t1}.DataType(i,1) | id #5
+            ) | id #6
+        ) |
+        id #7
+    ) | /d
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{m}.Loc{a} | Dedge{n}.Loc{b} | Dedge{o}.Loc{c} | Dedge{p}.Loc{d} | id) | #0
+        Import.(Dedge{q}.Loc{a} | Dedge{r}.Loc{b} | Dedge{s}.Loc{c} | Dedge{t}.Loc{d} | id) | #1
+        Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | Dedge{z}.Loc{c} | Dedge{w}.Loc{d} | id) | #2
+        Body.(
+            Region(1).id | #8
+            Region(2).id #14
+        ) | {s1} | {s2} |
+        id #15 
+    )
+)
+    @[3, 4, 5, 6, 7, 0, 1, 2, 8, 14, 15]
+    ;
+
+
+## ## ## ## ## ## ## ## ## ## ## ## 
+## Invariant Value Redirection   ##
+## ## ## ## ## ## ## ## ## ## ## ## 
+
+react opt_invariant_value_redirection = /y 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.(Dedge{y}.Loc{a} | id) |
+        Export.(Dedge{y}.Loc{b} | id) |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    -->
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    ;
+
+## ## ## ## ## ## ## ## ## ##
+## Theta-Gamma Inversion   ##
+## ## ## ## ## ## ## ## ## ##
+## NB: not working
+
+## react opt_theta_gamma_inversion = /a
+##     Node.(
+##         NodeType.Theta |
+##         Read.(Dedge{x}.Loc{a} | id) | #0
+##         Import.(Dedge{y}.Loc{a} | id) | #1
+##         Body.Region(0).(
+##             Node.(
+##                 NodeType.Gamma |
+##                 Read.(Dedge{y}.Branch | id) | #2
+##                 Import.(ID(1) | id) | #3
+##                 Import.(ID(2) | id) | #4
+##                 Body.(
+##                     Region(1).id | Region(2).id #5,6
+##                 ) |
+##                 Export.(ID(1) | id) | #7
+##                 Export.(ID(2) | id) | #8
+##                 Write.id #9
+##             ) |
+##             id #10
+##         ) |
+##         Export.id | #11
+##         Write.id #12 |
+##     )
+##     -->
+##     Node.(
+##         NodeType.GammaThetaIntermediate | {y} |
+##         Read.(Dedge{x}.Branch | id) | # 0
+##         Import.(ID(1) | id) | # 1
+##         Import.(ID(2) | id) | # 1
+##         Body.(
+##             Region(1).(
+##                 Node.(
+##                     NodeType.GammaThetaIntermediate |
+##                     Read.id | # 2
+##                     Import.id | # 3
+##                     Body.Region(0).id |# 5
+##                     Export.id | # 7
+##                     Write.id  # 9
+##                 ) |
+##                 id # 10
+##             ) |
+##             Region(2).(
+##                 Node.(
+##                     NodeType.GammaThetaIntermediate |
+##                     Read.id | # 2
+##                     Import.id | # 4
+##                     Body.Region(0).id | # 6
+##                     Export.id | # 8
+##                     Write.id  # 9
+##                 ) |
+##                 id # 10
+##             )
+##         )
+##         |
+##         Export.(ID(1) | id) | # 11
+##         Export.(ID(2) | id) | # 11
+##         Write.id # 12
+##     )
+##     @[0, 1, 1, 2, 3, 5, 7, 9, 10, 2, 4, 6, 8, 9, 10, 11, 11, 12]
+##     ;
+
+## Theta-Gamma inversion (resricted) ##
+## NB: Not Working ##
+react opt_theta_gamma_inversion_restrict = /a
+    Node.(
+        NodeType.Theta |
+        Read.(Dedge{x}.Loc{a} | id) | #0
+        Import.(Dedge{y}.Loc{a} | id) | #1
+        Body.Region(0).(
+            Node.(
+                NodeType.Gamma |
+                Read.(Dedge{y}.Branch | id) | #2
+                Import.(ID(1) | id) | #3
+                Import.(ID(2) | id) | #4
+                Body.(
+                    Region(1).id | Region(2).id #5,6
+                ) |
+                Export.(ID(1) | id) | #7
+                Export.(ID(2) | id) | #8
+                Write.id #9
+            ) 
+        ) |
+        Export.id | #10
+        Write.id #11 |
+    )
+    -->
+    Node.(
+        NodeType.GammaThetaIntermediate | {y} |
+        Read.(Dedge{x}.Branch | id) | # 0
+        Import.(ID(1) | id) | # 1
+        Import.(ID(2) | id) | # 1
+        Body.(
+            Region(1).(
+                Node.(
+                    NodeType.GammaThetaIntermediate |
+                    Read.id | # 2
+                    Import.id | # 3
+                    Body.Region(0).id |# 5
+                    Export.id | # 7
+                    Write.id  # 9
+                ) 
+            ) |
+            Region(2).(
+                Node.(
+                    NodeType.GammaThetaIntermediate |
+                    Read.id | # 2
+                    Import.id | # 4
+                    Body.Region(0).id | # 6
+                    Export.id | # 8
+                    Write.id  # 9
+                ) 
+            )
+        )
+        |
+        Export.(ID(1) | id) | # 10
+        Export.(ID(2) | id) | # 10
+        Write.id # 11
+
+    )
+    @[0, 1, 1, 2, 3, 5, 7, 9, 2, 4, 6, 8, 9, 10, 10, 11]
+    ;
+
+
+react opt_fix_gamma_theta_final = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.(
+            Region(1).Node.(
+                NodeType.GammaThetaIntermediate |
+                id
+            ) |
+            Region(2).Node.(
+                NodeType.GammaThetaIntermediate |
+                id
+            )
+        ) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Gamma |
+        Body.(
+            Region(1).Node.(
+                NodeType.Theta |
+                id
+            ) |
+            Region(2).Node.(
+                NodeType.Theta |
+                id
+            )
+        ) |
+        id
+    )
+    ;
+
+
+react opt_fix_gamma_theta_add_inner = 
+    Node.id |
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.Region(0).id |
+        id
+    )
+    -->
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.Region(0).(Node.id | id) |
+        id
+    )
+    ;
+
+
+fun react opt_fix_gamma_theta_connect_inner_r(i) = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Import.(Dedge{x}.id | id ) |
+        Body.(
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Read.id |
+                Import.id |
+                Body.Region(0).(
+                    Node.(
+                        Read.(Dedge{x}.id | id) |
+                        id
+                    ) | 
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    --> /u
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Import.(Dedge{u}.id | id) |
+        Body.( /a
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Read.(Dedge{u}.Loc{a} | id ) |
+                Import.(Dedge{x}.Loc{a} | id) |
+                Body.Region(0).(
+                    Node.(
+                        Read.(Dedge{x}.id | id) |
+                        id
+                    ) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    ;
+
+
+fun react opt_fix_gamma_theta_connect_inner_w(i) = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Export.(Dedge{x}.id | id) |
+        Body.(
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Write.id |
+                Export.id |
+                Body.Region(0).(
+                    Node.(
+                        Write.(Dedge{x}.id | id) |
+                        id
+                    ) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    --> /u
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Export.(Dedge{u}.id | id) |
+        Body.( /a
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Write.(Dedge{u}.Loc{a} | id ) |
+                Export.(Dedge{x}.Loc{a} | id) |
+                Body.Region(0).(
+                    Node.(
+                        Write.(Dedge{x}.id | id) |
+                        id
+                    ) |
+                    id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    ;
+
+
+fun react opt_fix_move_branch(i) = 
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.(
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Export.(Dedge{x}.Loc{a} | id) |
+                Write.(Dedge{y}.Loc{a} | id) |
+                id
+            ) |
+            id
+        ) |
+        Export.(Dedge{y}.Branch | id) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.GammaThetaIntermediate |
+        Body.(
+            Region(i).Node.(
+                NodeType.GammaThetaIntermediate |
+                Export.(Dedge{x}.Branch | id) |
+                Write.id | {a} | {y} |
+                id
+            ) |
+            id
+        ) |
+        Export.id |
+        id
+    )
+    ;
+
+
+react opt_fix_disconnect_edges_in_regions_new_r = 
+    Body.(
+        Region(1).(
+            Node.(
+                Read.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        ) |
+        Region(2).(
+            Node.(
+                Read.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        )
+    )
+    --> /b /y 
+    Body.(
+        Region(1).(
+            Node.(
+                Read.(
+                    Dedge{y}.Loc{b} | id
+                ) |
+                id      
+            ) |
+            id
+        ) |
+        New{y}.Old{x} |
+        New{b}.Old{a} |
+        Region(2).(
+            Node.(
+                Read.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        )
+    )
+    ;
+    
+
+react opt_fix_disconnect_edges_in_regions_new_w = 
+Body.(
+    Region(1).(
+        Node.(
+            Write.(
+                Dedge{x}.Loc{a} | id
+            ) |
+            id      
+        ) |
+        id
+    ) |
+    Region(2).(
+        Node.(
+            Write.(
+                Dedge{x}.Loc{a} | id
+            ) |
+            id      
+        ) |
+        id
+    )
+)
+    --> /b /y 
+    Body.(
+        Region(1).(
+            Node.(
+                Write.(
+                    Dedge{y}.Loc{b} | id
+                ) |
+                id      
+            ) |
+            id
+        ) |
+        New{y}.Old{x} |
+        New{b}.Old{a} |
+        Region(2).(
+            Node.(
+                Write.(
+                    Dedge{x}.Loc{a} | id
+                ) |
+                id      
+            ) |
+            id
+        )
+    )
+    ;
+
+
+react opt_fix_disconnect_edges_in_regions_d = 
+    New{y}.Old{x} |
+    Region(2).id ||
+    NodeType.GammaThetaIntermediate |
+    Import.(ID(2) | id) |
+    Export.(ID(2) | id) ||
+    Dedge{x}.id
+    -->
+    New{y}.Old{x} |
+    Region(2).id ||
+    NodeType.GammaThetaIntermediate |
+    Import.(ID(2) | id) |
+    Export.(ID(2) | id) ||
+    Dedge{y}.id
+    ;
+
+
+react opt_fix_disconnect_edges_in_regions_l = 
+    New{y}.Old{x} |
+    Region(2).id ||
+    NodeType.GammaThetaIntermediate |
+    Import.(ID(2) | id) |
+    Export.(ID(2) | id) ||
+    Loc{x}
+    -->
+    New{y}.Old{x} |
+    Region(2).id ||
+    NodeType.GammaThetaIntermediate |
+    Import.(ID(2) | id) |
+    Export.(ID(2) | id) ||
+    Loc{y}
+    ;
+
+
+react opt_fix_disconnect_edges_in_regions_l1 = 
+    New{y}.Old{x} |
+    Region(2).id ||
+    NodeType.GammaThetaIntermediate |
+    Import.(ID(2) | id) |
+    Export.(ID(2) | id) ||
+    Loc1{x}.id
+    -->
+    New{y}.Old{x} |
+    Region(2).id ||
+    NodeType.GammaThetaIntermediate |
+    Import.(ID(2) | id) |
+    Export.(ID(2) | id) ||
+    Loc1{y}.id
+    ;
+
+
+react opt_fix_disconnect_edges_in_regions_fin = 
+    New{y}.Old{x}
+    -->
+    1 | {y} | {x}
+    ;
+
+
+## Fix Rules for the implemented optimisations ##
+
+react opt_fix_finish_ivr_dis = /a /b ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+)
+    --> /u (
+    Alias{x,z}.AliasNewName{u} |
+    Node.(
+        Read.id |
+        Import.id |
+        Export.id |
+        Write.id |
+        id
+    )
+)
+    ;
+
+react opt_fix_finish_ivr_con = /a ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{a} | id) |
+        id
+    )
+)
+    --> /u (
+    Alias{x,z}.AliasNewName{u} | {b} |
+    Node.(
+        Read.id |
+        Import.id |
+        Export.id |
+        Write.id |
+        id
+    )
+)
+    ;
+
+
+react opt_fix_finish_ivr_read = /a ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+)
+    --> {x} |
+    Node.(
+        Read.id |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id)  |
+        id
+    )
+    ;
+
+
+react opt_fix_finish_ivr_write = /b ( ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+)
+    --> /u (
+    Alias{x,z}.AliasNewName{u} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.id |
+        id
+    )
+)
+    ;
+
+
+react opt_fix_unfinished_ivr =  ## Used in IVR 
+    IvrMaybe{a,b} |
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    -->
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.id |
+        Export.id |
+        Write.(Dedge{z}.Loc{b} | id) |
+        id
+    )
+    ;
+
+
+react opt_fix_remove_unused_read_th = ## Used in NPO 
+    /a 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        NodeType.Theta |
+        id
+    )
+    -->
+    {x} |
+    Node.(
+        Read.id |
+        NodeType.Theta |
+        id
+    )
+    ;
+
+react opt_fix_remove_unused_read_g = ## Used in NPO 
+    /a 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | id) |
+        NodeType.Gamma |
+        id
+    )
+    -->
+    {x} |
+    Node.(
+        Read.id |
+        NodeType.Gamma |
+        id
+    )
+    ;
+
+## react opt_fix_remove_unused_write = ## Used in NPO ?
+##     /a 
+##     Node.(
+##         Write.(Dedge{x}.Loc{a} | id) |
+##         id
+##     )
+##     -->
+##     {x} |
+##     Node.(
+##         Write.id |
+##         id
+##     )
+##     if !Simple in param ## This condition does not work!
+##     ;
+
+
+react opt_fix_consolidate_read = 
+    Node.(
+        Read.(Dedge{x}.Loc{a} | Dedge{x}.Loc{b} | id) |
+        id
+    ) 
+    --> /u
+    Node.(
+        Read.(Dedge{x}.Loc{u} |  Alias{a,b}.AliasNewName{u} | id) |
+        id
+    ) 
+    if !Simple in param
+    ;
+
+
+react opt_fix_remove_unused_import = /y ## Used for Node Push Out
+    Node.(
+        Import.(Dedge{y}.Loc{a} | id) |
+        id
+    )
+    -->
+    Node.(
+        Import.id |
+        id
+    ) | {a}
+    ;
+
+
+fun react opt_fix_gamma_read(i) =  ## Used in Node Pull-in
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{x}.Loc{a} | id) |
+        Import.(ID(i) | Dedge{x}.Loc{a} | id) |
+        Body.(
+            Region(i).id | 
+            id
+        ) |
+        id
+    )
+    --> /b /y
+    Node.(
+        NodeType.Gamma |
+        Read.(Dedge{x}.Loc{b} | id) |
+        Import.(ID(i) | Dedge{y}.Loc{b} | id) | {a} |
+        Body.(
+            Region(i).(
+                New{y}.Old{x} |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    ;
+
+fun react opt_fix_gamma_read_iter(i) = ## Used in Node Pull-in
+    Node.(
+        NodeType.Gamma |
+        Body.(
+            Region(i).(
+                New{y}.Old{x} |
+                Node.(
+                    Read.(Dedge{x}.id | id) |id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    -->
+    Node.(
+        NodeType.Gamma |
+        Body.(
+            Region(i).(
+                New{y}.Old{x} |
+                Node.(
+                    Read.(Dedge{y}.id | id) |id
+                ) |
+                id
+            ) |
+            id
+        ) |
+        id
+    )
+    ;
+
+react opt_fix_gamma_read_fin = # Used in Node Pull-in
+    New{y}.Old{x}
+    -->
+    1 | {y} | {x}
+    ;
+
+
+react opt_deduplicate_import_read = /b (  ## Used in Node pull-in
+    Read.(Dedge{z}.Loc{a} | Dedge{z}.Loc{b} | id) |
+    Import.(Dedge{x}.Loc{a} | Dedge{y}.Loc{b} | id) 
+)
+    --> /u (
+    Read.(Dedge{z}.Loc{a} | id) |
+    Import.(Dedge{u}.Loc{a} | Alias{x,y}.AliasNewName{u}| id)
+)
+    ;
+
+
+# ## ## Misc ## ## #
+## Aliasing fixes
+react aliasing_connect = 
+    Alias{x,y}.AliasNewName{u} || 
+    Dedge{x}.id
+    -->
+    Alias{x,y}.AliasNewName{u} ||
+    Dedge{u}.id
+    ;
+
+react aliasing_finish = /x /y
+    Alias{x,y}.AliasNewName{u}
+    -->
+    1 | {u}
+    ;
+
+
+###
+# Author: Borislav Kratchanov
+# Copyright:
+###
+
+begin brs 
+    int i = {0, 1, 2};
+    int j = {1, 2};
+    int opts = {0, 1, 2, 3, 4, 5};
+    string s_instr_2_com = {"Add", "Mul", "Load", "Fadd", "Fmul"};
+    ## string s_instr_1 = {"Load", }
+    init cfg;
+    rules = [   
+                (aliasing_connect),
+                (aliasing_finish),
+                
+                ## (opt_fix_disconnect_edges_in_regions_d,
+                ## opt_fix_disconnect_edges_in_regions_l,
+                ## opt_fix_disconnect_edges_in_regions_l1),
+                ## (opt_fix_disconnect_edges_in_regions_new_r),
+                ## (opt_fix_disconnect_edges_in_regions_new_w),
+                ## (opt_fix_disconnect_edges_in_regions_fin),
+                ## (opt_fix_gamma_theta_add_inner), # gets here
+                ## (opt_fix_gamma_theta_connect_inner_r(j), opt_fix_gamma_theta_connect_inner_w(j)),
+                ## {opt_fix_move_branch(j)},
+                ## {opt_fix_gamma_theta_final},
+
+                {opt_fix_finish_ivr_con, opt_fix_finish_ivr_dis},
+                (opt_fix_finish_ivr_read, opt_fix_finish_ivr_write),
+                (opt_fix_unfinished_ivr),
+
+                (opt_fix_gamma_read_iter(j)),
+                (opt_fix_gamma_read_fin),
+                (opt_fix_gamma_read(j)),
+                (opt_deduplicate_import_read),
+                (opt_fix_consolidate_read),
+                (opt_fix_remove_unused_import),
+                (opt_fix_remove_unused_read_th, opt_fix_remove_unused_read_g),
+                
+                {
+                    opt_common_node_elimination_2_comm(s_instr_2_com),
+                    opt_node_pushout_theta_2_read, opt_node_pushout_theta_1_read, opt_node_pushout_theta_store,
+                    opt_node_pull_in(i),
+                    opt_invariant_value_redirection,
+                    opt_node_pushout_2_gamma_2_comm(s_instr_2_com),
+                    opt_node_pushout_2_gamma_3_non_comm("Store",opts)
+                    ## opt_theta_gamma_inversion_restrict
+                 }
+                  ];
+end
