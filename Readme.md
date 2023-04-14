@@ -1,2 +1,2 @@
 # L5 Project
-Delelopment is in the develop branch.
+Code is in the develop branch.
