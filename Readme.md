@@ -1,9 +1,9 @@
 # Optimising Compiler implemented using declarative bigraph reaction rules
 `L5 Project`
 
-Author: Borislav Kratchanov
+Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
 
-Copyright: 
+Copying: Check License file in top level of GitHub repository for information on redistribution and use
 
 ## NB: Most up-to-date information on the implementation can be found on github, at https://github.com/Bobby612/L5-Project/tree/develop
 If you have any questions regarding the implementation, do not hesitate to contact me at b.k.kratchanov@gmail.com 

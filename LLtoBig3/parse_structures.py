@@ -7,8 +7,9 @@ from parse_instructions import *
 
 """
 
-Author: Borislav Kratchanov
-Copyright: 
+Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
+
+Copying: Check License file in top level of GitHub repository for information on redistribution and use
 
 Parse the different structures
 

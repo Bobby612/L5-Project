@@ -1,6 +1,10 @@
 # LLVM to Bigrapher
 Take an LLVM program and perform inter-procedural analysis and partially intra-procedural analysis. Output an inter-procedural RVSDG with Omega, Lambda and Delta nodes, with CFG as Lambda node Regions. Each CFG block has an RVSDG Region segment with simple nodes. 
 
+Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
+
+Copying: Check License file in top level of GitHub repository for information on redistribution and use
+
 ## Use
 Pass the name of a valid {filename}.ll LLVM assembly file as a command line argument to llvm_to_bigrapher.py. It will convert it and save {filename}.big -- the graph corresponding to the file, and {filename}.json -- the text arguments that should have been included in the graph (they are removed because of partial support for strings in BigraphER).
 

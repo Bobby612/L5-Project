@@ -1,6 +1,10 @@
 # BigraphER RVSDG Intra-procedural Analysis
 Turn the CFG in each Lambda Node Region into a valid RVSDG Region with Gamma and Theta nodes.
 
+Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
+
+Copying: Check License file in top level of GitHub repository for information on redistribution and use
+
 ## Use
 1. Paste the input graph in the directory as {name}.big
 2. Concatenate the files in the directory

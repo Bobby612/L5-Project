@@ -12,8 +12,9 @@ import global_vars
 
 """
 
-Author: Borislav Kratchanov
-Copyright: 
+Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
+
+Copying: Check License file in top level of GitHub repository for information on redistribution and use
 
 Convert the LLVM structures of an LLVM program to RVSDG in BigraphER format.
 

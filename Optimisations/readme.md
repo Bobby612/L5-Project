@@ -1,6 +1,10 @@
 # Optimisations
 Take a RVSDG program expressed as a BigraphER txt representation and apply optimisations.
 
+Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
+
+Copying: Check License file in top level of GitHub repository for information on redistribution and use
+
 ## Use
 1. Concatenate the model files
 2. Run the model with the program txt as the initial state

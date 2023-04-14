@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# # # # # # # # # # # # # # # # 
-# Author: Borislav Kratchanov
-# Copyright: 
-# # # # # # # # # # # # # # # # 
+###
+# Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
+# Copying: Check License file in top level of GitHub repository for information on redistribution and use
+### 
 
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
