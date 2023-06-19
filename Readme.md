@@ -5,8 +5,10 @@ Author: Borislav Kratchanov, b.k.kratchanov@gmail.com
 
 Copying: Check License file in top level of GitHub repository for information on redistribution and use
 
-## NB: Most up-to-date information on the implementation can be found on github, at https://github.com/Bobby612/L5-Project/tree/develop
 If you have any questions regarding the implementation, do not hesitate to contact me at b.k.kratchanov@gmail.com 
+
+## Thesis
+The code was developed as part of my Level 5 Masters project. The final thesis is available in the corresponding folder. 
 
 ## Implementation Status
 The compiler converts an LLVM textual IR to RVSDG expressed as a bigraph and applies optimisations to the IR.
